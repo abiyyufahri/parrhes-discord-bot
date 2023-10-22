@@ -1,0 +1,49 @@
+const { Client, GatewayIntentBits } = require("discord.js");
+const config = require("../config.js");
+
+module.exports = {
+  registerAboutMeCommand: (client) => {
+    client.on("ready", () => {
+      console.log(`Logged in as ${client.user.tag}`);
+
+      // Define the "About Me" slash command
+      const aboutMeCommand = {
+        name: "aboutme",
+        description: "Get information about the bot.",
+      };
+
+      // Register the slash command globally
+      client.application.commands.create(aboutMeCommand);
+    });
+
+    client.on("interactionCreate", async (interaction) => {
+      if (!interaction.isCommand()) return;
+
+      const { commandName } = interaction;
+
+      if (commandName === "aboutme") {
+        const embed = {
+          title: "About My Bot",
+          description: "This bot is a simple Discord bot built with Discord.js.",
+          fields: [
+            {
+              name: "Author",
+              value: "Your Name",
+            },
+            {
+              name: "Version",
+              value: config.version, // You may need to adapt this based on your bot's configuration
+            },
+          ],
+          color: 0x3498db,
+          footer: {
+            text: "Thank you for using my bot!",
+          },
+        };
+
+        // Send the response back to the user
+        interaction.reply({ embeds: [embed] });
+      }
+    });
+  },
+};
