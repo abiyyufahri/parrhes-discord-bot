@@ -14,7 +14,7 @@ module.exports = async (client, queue, song) => {
     if (queue?.textChannel) {
       const embed = new EmbedBuilder()
         .setColor('#3498db') // Set the color of the embed
-        .setTitle('Now Playing')
+        .setTitle('<:music:1166419533360283648> Now Playing')
         .setDescription(lang.msg13.replace("{track?.title}", song?.name).replace("{queue?.connection.channel.name}", `<#${queue.voice.connection.joinConfig.channelId}>`))
 
       queue.textChannel.send({ embeds: [embed] }).catch((e) => {

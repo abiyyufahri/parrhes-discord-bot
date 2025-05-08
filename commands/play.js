@@ -119,23 +119,34 @@ module.exports = {
       }
 
       if (stp === "normal") {
-        const name = interaction.options.getString('name')
-        if (!name) return interaction.reply({ content: lang.msg59, ephemeral: true }).catch(e => { })
+        const name = interaction.options.getString('name');
+        if (!name) return interaction.reply({ content: lang.msg59, ephemeral: true }).catch(e => { });
 
-        await interaction.reply({ content: lang.msg61 }).catch(e => { })
+        const msg61Embed = new EmbedBuilder()
+          .setColor('#474747') // Set the color (you can use any valid color code)
+          .setDescription(lang.msg61); // Set the description
+
+        // Send the msg61Embed and save the sent message
+        const msg61Message = await interaction.reply({ embeds: [msg61Embed] }).catch(e => { });
+
         try {
           await client.player.play(interaction.member.voice.channel, name, {
             member: interaction.member,
             textChannel: interaction.channel,
             interaction
-          })
+          });
+
+          // Delete the msg61Message after showing the playasong.js embed
+          msg61Message.delete().catch(e => {
+            console.error("Error while deleting msg61Embed:", e);
+          });
         } catch (e) {
-          await interaction.editReply({ content: lang.msg60, ephemeral: true }).catch(e => { })
+          await interaction.editReply({ content: lang.msg60, ephemeral: true }).catch(e => { });
         }
       }
     } catch (e) {
       const errorNotifer = require("../functions.js")
-     errorNotifer(client, interaction, e, lang)
-      }
+      errorNotifer(client, interaction, e, lang)
+    }
   },
 };

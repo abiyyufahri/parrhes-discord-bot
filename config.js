@@ -1,6 +1,5 @@
 module.exports = {
-  TOKEN:
-    "token",
+  TOKEN: "MTE2NTIxNzkxMDIxMDQ0OTQzOA.GYvILY.W3TdS76oXOvoiKbykuyJdSHHS1Qj9uLbb0U3WA",
   ownerID: [], //write your discord user id. example: ["id"] or ["id1","id2"]
   botInvite: "", //write your discord bot invite.
   supportServer: "", //write your discord bot support server invite.
@@ -13,10 +12,14 @@ module.exports = {
   errorLog: "", //write your discord error log channel id.
   aboutMe:
     "Saya adalah bot yang luar biasa! Saya dikembangkan oleh Muhammad Abiyyu Al-Ghifari dan saya siap untuk membantu server Discord Anda. Saya bisa memutar musik, mengelola daftar putar, dan banyak lagi. Jangan ragu untuk mengundang saya ke server Anda dan gunakan perintah `!help` untuk melihat apa yang bisa saya lakukan!",
+  spotify: {
+    clientId: "307e0aea9f96440bb786017403156447",
+    clientSecret: "601794c1cb4f434b8808634cd94e69d0"
+  },
 
   sponsor: {
     status: true, //true or false
-    url: "https://abiyyufahri.rf.gd", //write your discord sponsor url.
+    url: "https://abiyyufahri.my.id", //write your discord sponsor url.
   },
 
   voteManager: {
