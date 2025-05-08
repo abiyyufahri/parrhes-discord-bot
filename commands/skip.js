@@ -29,16 +29,26 @@ module.exports = {
         try {
         let old = queue.songs[0];
         await client.player.jump(interaction, number).then(song => {
-          return interaction.reply({ content: `**${old.name}**, ${lang.msg83}` }).catch(e => { })
+          const embed = new EmbedBuilder()
+          .setColor("#F7A531")
+          .setDescription(`**${old.name}**, ${lang.msg83} <:skipped:1166679375090024498>`)
+          return interaction.reply({ embeds: [embed]  }).catch(e => { })
         })
       } catch(e){
-        return interaction.reply({ content: lang.msg63, ephemeral: true }).catch(e => { })
+        const embed = new EmbedBuilder()
+          .setColor("#F7A531")
+          .setDescription(`${lang.msg63}`)
+        return interaction.reply({ embeds:[embed] , ephemeral: true }).catch(e => { })
       }
       } else {
         try {
           let old = queue.songs[0];
           const success = await queue.skip();
-          return interaction.reply({ content: success ? `**${old.name}**, ${lang.msg83}` : lang.msg41 }).catch(e => { })
+          const embed = new EmbedBuilder()
+          .setColor("#F7A531")
+          .setDescription(success ? `**${old.name}**, ${lang.msg83} <:skipped:1166679375090024498>` : lang.msg41)
+          
+          return interaction.reply({ embeds:  [embed]  }).catch(e => { })
         } catch (e) {
           return interaction.reply({ content: lang.msg63, ephemeral: true }).catch(e => { })
         }

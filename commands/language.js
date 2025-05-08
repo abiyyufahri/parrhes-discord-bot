@@ -13,85 +13,22 @@ module.exports = {
       const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
       let buttons = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
-          .setLabel("Türkçe")
-          .setCustomId('tr')
-          .setStyle(ButtonStyle.Secondary)
-          .setEmoji('🇹🇷'), 
-        new ButtonBuilder()
           .setLabel("English")
           .setCustomId('en')
           .setStyle(ButtonStyle.Secondary)
-          .setEmoji('🇬🇧'),
+          .setEmoji('🇬🇧'),  
         new ButtonBuilder()
-          .setLabel("Nederlands")
-          .setCustomId('nl')
+          .setLabel("Indonesia")
+          .setCustomId('id')
           .setStyle(ButtonStyle.Secondary)
-          .setEmoji('🇳🇱'),
-        new ButtonBuilder()
-          .setLabel("العربية")
-          .setCustomId('ar')
-          .setStyle(ButtonStyle.Secondary)
-          .setEmoji('🇸🇦'),
-        new ButtonBuilder()
-          .setLabel("Français")
-          .setCustomId('fr')
-          .setStyle(ButtonStyle.Secondary)
-          .setEmoji('🇫🇷'),
+          .setEmoji('🇮🇩'),
       )
-
-      let buttons2 = new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-            .setLabel("Português")
-            .setCustomId('pt')
-            .setStyle(ButtonStyle.Secondary)
-            .setEmoji('🇧🇷'),
-            new ButtonBuilder()
-            .setLabel("正體中文")
-            .setCustomId('zh_TW')
-            .setStyle(ButtonStyle.Secondary)
-            .setEmoji('🇨🇳'),
-	     new ButtonBuilder()
-            .setLabel("Italiano")
-            .setCustomId('it')
-            .setStyle(ButtonStyle.Secondary)
-            .setEmoji('🇮🇹'),
-	     new ButtonBuilder()
-            .setLabel("Indonesia")
-            .setCustomId('id')
-            .setStyle(ButtonStyle.Secondary)
-            .setEmoji('🇮🇩'),
-        new ButtonBuilder()
-            .setLabel("Español")
-            .setCustomId('es')
-            .setStyle(ButtonStyle.Secondary)
-            .setEmoji('🇪🇸'),
-        )
-
-        let buttons3 = new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-            .setLabel("Русский")
-            .setCustomId('ru')
-            .setStyle(ButtonStyle.Secondary)
-            .setEmoji('🇷🇺'),
-            new ButtonBuilder()
-            .setLabel("Deutsch")
-            .setCustomId('de')
-            .setStyle(ButtonStyle.Secondary)
-            .setEmoji('🇩🇪'),
-            new ButtonBuilder()
-            .setLabel("日本語")
-            .setCustomId('ja')
-            .setStyle(ButtonStyle.Secondary)
-            .setEmoji('🇯🇵'),
-        )
-        
-
       let embed = new EmbedBuilder()
         .setColor(client.config.embedColor)
         .setTitle("Select a language")
         .setTimestamp()
         .setFooter({ text: `Parrhesia 🌀` })
-      interaction?.reply({ embeds: [embed], components: [buttons, buttons2, buttons3] }).then(async Message => {
+      interaction?.reply({ embeds: [embed], components: [buttons] }).then(async Message => {
 
         const filter = i => i.user.id === interaction?.user?.id
         let col = await Message.createMessageComponentCollector({ filter, time: 30000 });
