@@ -14,7 +14,8 @@ module.exports = {
     "Saya adalah bot yang luar biasa! Saya dikembangkan oleh Muhammad Abiyyu Al-Ghifari dan saya siap untuk membantu server Discord Anda. Saya bisa memutar musik, mengelola daftar putar, dan banyak lagi. Jangan ragu untuk mengundang saya ke server Anda dan gunakan perintah `!help` untuk melihat apa yang bisa saya lakukan!",
   spotify: {
     clientId: "307e0aea9f96440bb786017403156447",
-    clientSecret: "601794c1cb4f434b8808634cd94e69d0"
+    clientSecret: "601794c1cb4f434b8808634cd94e69d0",
+    redirectUri: "http://localhost:3002/callback" // URI untuk autentikasi Spotify
   },
 
   sponsor: {
