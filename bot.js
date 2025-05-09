@@ -7,6 +7,11 @@ const { YtDlpPlugin } = require("@distube/yt-dlp");
 const config = require("./config.js");
 const fs = require("fs");
 
+// Import ffmpeg-static to register its path in the environment
+const ffmpegPath = require('ffmpeg-static');
+// Register the FFmpeg path to be found by DisTube
+process.env.FFMPEG_PATH = ffmpegPath;
+
 // Load opusscript for Node.js v20 compatibility
 require('opusscript');
 
