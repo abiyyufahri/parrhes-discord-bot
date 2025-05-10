@@ -460,7 +460,12 @@ function startExpressServer(port) {
     const server = app
       .listen(port)
       .on("listening", () => {
-        console.log(`Express server is running on port ${port}`)
+        // Log host and port information
+        const address = server.address();
+        const host = address.address === '::' ? 'localhost' : address.address;
+        const port = address.port;
+        console.log(`[EXPRESS] Server running at http://${host}:${port}`);
+        console.log(`[EXPRESS] Spotify callback URL: ${config.spotify.redirectUri}`);
         resolve(server)
       })
       .on("error", (err) => {
