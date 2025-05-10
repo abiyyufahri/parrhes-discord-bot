@@ -15,6 +15,7 @@
     "@distube/ytdl-core": "^4.16.10",
     "@distube/ytsr": "^2.0.4",
     "@top-gg/sdk": "^3.1.5",
+    "axios": "^1.9.0",
     "discord-api-types": "^0.37.60",
     "discord.js": "^14.13.0",
     "distube": "^5.0.7",
