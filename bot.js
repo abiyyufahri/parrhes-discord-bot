@@ -3,7 +3,7 @@ const { DisTube } = require("distube")
 const { SpotifyPlugin } = require("@distube/spotify")
 const { SoundCloudPlugin } = require("@distube/soundcloud")
 const { DeezerPlugin } = require("@distube/deezer")
-const { YtDlpPlugin } = require("@distube/yt-dlp")
+const { YouTubePlugin } = require("@distube/youtube")
 const config = require("./config.js")
 const fs = require("fs")
 
@@ -42,13 +42,9 @@ const { joinVoiceChannel, VoiceConnectionStatus, entersState } = require('@disco
 client.config = config
 client.player = new DisTube(client, {
   // Opsi valid menurut dokumentasi DisTube v5
-  emitNewSongOnly: true,
-  emitAddSongWhenCreatingQueue: false,
-  emitAddListWhenCreatingQueue: false,
-  
+    
   plugins: [
-    new YtDlpPlugin({
-      update: true
+    new YouTubePlugin({
     }),
     new SpotifyPlugin({
       api: {
@@ -56,11 +52,8 @@ client.player = new DisTube(client, {
         clientSecret: client.config.spotify?.clientSecret
       }
     }),
-    new SoundCloudPlugin(),
     new DeezerPlugin()
   ],
-  
-
   
   nsfw: false,
   joinNewVoiceChannel: false

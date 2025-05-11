@@ -2,6 +2,10 @@ const { EmbedBuilder } = require("discord.js")
 const db = require("../../mongoDB")
 
 module.exports = async (client, queue, song) => {
+  
+  // Menampilkan panjang queue sebelum musik diputar
+  console.log(`[QUEUE LENGTH] Panjang queue sebelum memutar "${song?.name}": ${queue?.songs?.length || 0} lagu`);
+  
   console.log(`[DEBUG] playSong event triggered for song: "${song?.name}" in guild: ${queue?.textChannel?.guild?.id}`);
   
   // Debug song object to understand available properties
@@ -53,7 +57,7 @@ module.exports = async (client, queue, song) => {
           .setTimestamp()
 
         // Send notification that music is being played
-        const playSongMessage = await queue.textChannel.send({ embeds: [embed] });
+        const playSongMessage = await song.metadata?.loadingMessage.edit({ embeds: [embed] });
         console.log(`[DEBUG] playSong message sent successfully: ${playSongMessage.id}`);
 
         // Delete the loading message if it exists in metadata
