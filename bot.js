@@ -44,6 +44,7 @@ client.player = new DisTube(client, {
   // Opsi valid menurut dokumentasi DisTube v5
     
   plugins: [
+    new DeezerPlugin(),
     new YouTubePlugin({
     }),
     new SpotifyPlugin({
@@ -51,8 +52,7 @@ client.player = new DisTube(client, {
         clientId: client.config.spotify?.clientId,
         clientSecret: client.config.spotify?.clientSecret
       }
-    }),
-    new DeezerPlugin()
+    })
   ],
   
   nsfw: false,

@@ -27,7 +27,7 @@ module.exports = async (client, queue) => {
 
           const embed = new EmbedBuilder()
             .setColor("#FFC0CB")
-            .setTitle("Queue Finished")
+            .setTitle(lang.queue_finished)
             .setDescription(lang.msg15)
             .setFooter({ text: `Parrhesia 🌀` })
 

@@ -159,7 +159,7 @@ module.exports = {
         const name = interaction.options.getString("name");
         if (!name) return interaction.editReply({ content: lang.msg59, ephemeral: true }).catch((e) => {});
 
-        // Buat embed loading awal
+        // Buat embed loading yang lebih menarik
         const loadingEmbed = new EmbedBuilder()
           .setColor("#474747")
           .setDescription(`${lang.msg61} \`${name}\``);
@@ -192,7 +192,7 @@ module.exports = {
           const errorEmbed = new EmbedBuilder()
             .setColor("#FF0000")
             .setTitle(`❌ Error`)
-            .setDescription(`Terjadi kesalahan saat memutar musik: ${e.message}`)
+            .setDescription(`${lang.msg60}: ${e.message}`)
             .setFooter({ text: "Silakan coba dengan URL atau kata kunci lain" });
           
           await loadingMessage.edit({ 

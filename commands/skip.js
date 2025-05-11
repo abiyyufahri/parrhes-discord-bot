@@ -47,7 +47,7 @@ module.exports = {
           const embed = new EmbedBuilder()
           .setColor("#F7A531")
           .setDescription(success ? `**${old.name}**, ${lang.msg83} <:skipped:1166679375090024498>` : lang.msg41)
-          
+
           return interaction.reply({ embeds:  [embed]  }).edit(e => { })
         } catch (e) {
           return interaction.reply({ content: lang.msg63, ephemeral: true }).catch(e => { })

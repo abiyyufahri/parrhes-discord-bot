@@ -150,5 +150,36 @@ const language = {
    msg135: "Waktu pemutaran disetel ke {queue.formattedCurrentTime} berhasil",
    msg136: "Putar otomatis sekarang diaktifkan. Saya akan mengaktifkan musik acak mulai sekarang.",
    msg137: "Putar otomatis tidak aktif sekarang.",
-  }
-  module.exports = language;
+
+  // Entri baru untuk lokalisasi playlist
+  spotify_playlist: "Playlist Spotify",
+  enqueued: "Ditambahkan ke antrian",
+  owner: "Pemilik",
+  playlist_link: "Link Playlist",
+  click_here: "Klik Disini",
+  spotify_desc: "Musik dari playlist Spotify ini diambil langsung dari Spotify API dan diputar melalui bot. Audio berkualitas tinggi dengan metadata lengkap seperti judul, artis, dan album yang akurat.",
+  youtube_desc: "Playlist ini diambil dari YouTube dengan kualitas audio terbaik yang tersedia. Semua fitur YouTube seperti video dengan timestamp, playlist custom, dan live stream didukung.",
+  soundcloud_desc: "Musik dari SoundCloud diputar dengan kualitas tinggi dan mendukung semua fitur SoundCloud seperti track original, remix, dan repost dari kreator.",
+  added_by: "Ditambahkan oleh",
+  songs: "lagu",
+  music_playlist: "Playlist Musik",
+
+  // Entri baru untuk playSong.js
+  now_playing: "Sedang Diputar",
+  duration: "Durasi",
+  requested_by: "Diminta oleh",
+  source: "Sumber",
+  queue_has: "Antrian memiliki",
+  queue_footer: "Parrhesia 🌀 | Antrian memiliki {songCount} lagu",
+
+  // Entri baru untuk error.js
+  music_player_error: "Kesalahan Pemutar Musik:",
+  error_code: "Kode Kesalahan:",
+  error_tip_invalid_url: "Saran: Coba gunakan kata kunci pencarian yang berbeda atau URL yang valid.",
+  error_tip_connection: "Saran: Ada masalah koneksi. Periksa koneksi internet Anda dan coba lagi.",
+  error_tip_permission: "Saran: Bot tidak memiliki izin yang diperlukan. Periksa izin bot di channel suara.",
+
+  // Entri baru untuk finish.js
+  queue_finished: "Antrian Selesai"
+}
+module.exports = language;

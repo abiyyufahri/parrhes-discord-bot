@@ -41,7 +41,7 @@ module.exports = async (client, queue, song) => {
       try {
         const embed = new EmbedBuilder()
           .setColor("#3498db")
-          .setTitle("<:music:1166419533360283648> Now Playing")
+          .setTitle(`<:music:1166419533360283648> ${lang.now_playing}`)
           .setDescription(
             lang.msg13
               .replace("{track?.title}", song?.name)
@@ -49,11 +49,13 @@ module.exports = async (client, queue, song) => {
           )
           .setThumbnail(song.thumbnail || "https://img.youtube.com/vi/default/hqdefault.jpg")
           .addFields([
-            { name: "Duration", value: song.formattedDuration || "Unknown", inline: true },
-            { name: "Requested By", value: song.user ? `<@${song.user.id}>` : 'Unknown User', inline: true },
-            { name: "Source", value: song.source || "Unknown", inline: true },
+            { name: lang.duration, value: song.formattedDuration || "Unknown", inline: true },
+            { name: lang.requested_by, value: song.user ? `<@${song.user.id}>` : 'Unknown User', inline: true },
+            { name: lang.source, value: song.source ? (song.source.charAt(0).toUpperCase() + song.source.slice(1)) : "Unknown", inline: true },
           ])
-          .setFooter({ text: `Parrhesia 🌀 | Queue has ${queue.songs.length} song(s)` })
+          .setFooter({ 
+            text: lang.queue_footer.replace("{songCount}", queue.songs.length) 
+          })
           .setTimestamp()
 
         // Send notification that music is being played

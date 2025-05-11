@@ -150,6 +150,37 @@ const language = {
    msg135: "Playing time was set to {queue.formattedCurrentTime} sucessfully",
    msg136: "Autoplay is now turned on. I'm going to turn on random music from now on.",
    msg137: "Autoplay is off now.",
-   }
-   module.exports = language;
    
+  // New entries for playlist localization
+  spotify_playlist: "Spotify playlist",
+  enqueued: "Enqueued",
+  owner: "Owner",
+  playlist_link: "Playlist link",
+  click_here: "Click Here",
+  spotify_desc: "Music from this Spotify playlist is taken directly from the Spotify API and played through the bot. High-quality audio with complete metadata such as title, artist, and accurate album.",
+  youtube_desc: "This playlist is taken from YouTube with the best available audio quality. All YouTube features such as videos with timestamps, custom playlists, and live streams are supported.",
+  soundcloud_desc: "Music from SoundCloud is played in high quality and supports all SoundCloud features such as original tracks, remixes, and reposts from creators.",
+  added_by: "Added by",
+  songs: "songs",
+  music_playlist: "Music Playlist",
+  
+  // New entries for playSong.js
+  now_playing: "Now Playing",
+  duration: "Duration",
+  requested_by: "Requested By",
+  source: "Source",
+  queue_has: "Queue has",
+  queue_footer: "Parrhesia 🌀 | Queue has {songCount} song(s)",
+  
+  // New entries for error.js
+  music_player_error: "Music Player Error:",
+  error_code: "Error Code:",
+  error_tip_invalid_url: "Tip: Try using a different search keyword or a valid URL.",
+  error_tip_connection: "Tip: There's a connection issue. Check your internet connection and try again.",
+  error_tip_permission: "Tip: The bot doesn't have the required permissions. Check bot permissions in the voice channel.",
+  
+  // New entries for finish.js
+  queue_finished: "Queue Finished"
+}
+module.exports = language;
+
