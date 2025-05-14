@@ -158,8 +158,8 @@ class YouTubeMusicPlugin extends ExtractorPlugin {
               ? playlistInfo.thumbnails[playlistInfo.thumbnails.length - 1].url
               : null,
             songs: playlistSongs,
-            member: options.member || null,
-          });
+            member: options.member || null
+          }, options);
           
           return playlist;
           
@@ -185,8 +185,8 @@ class YouTubeMusicPlugin extends ExtractorPlugin {
               ? albumInfo.thumbnails[albumInfo.thumbnails.length - 1].url
               : null,
             songs: albumSongs,
-            member: options.member || null,
-          });
+            member: options.member || null
+          }, options);
           
           return album;
           
@@ -212,24 +212,25 @@ class YouTubeMusicPlugin extends ExtractorPlugin {
               ? artistInfo.thumbnails[artistInfo.thumbnails.length - 1].url
               : null,
             songs: artistSongs,
-            member: options.member || null,
-          });
+            member: options.member || null
+          }, options);
           
           return artist;
           
         case 'video':
           // Use ytdl-core to get detailed info for single video
-          const info = await ytdl.getInfo(`https://www.youtube.com/watch?v=${id}`);
+          const info = await ytdl.getInfo(`https://music.youtube.com/watch?v=${id}`);
           if (!info || !info.videoDetails) {
             throw new DisTubeError("YTMUSIC_PLUGIN_ERROR", "Failed to get video details");
           }
           
-          // Create a standardized Song object
+          // Create a standardized Song object and pass options directly
+          // DisTube will handle user information from options
           const song = new Song({
             source: "youtube-music",
             id: id,
             name: info.videoDetails.title || "Unknown Title",
-            url: `https://www.youtube.com/watch?v=${id}`,
+            url: `https://music.youtube.com/watch?v=${id}`,
             thumbnail: info.videoDetails.thumbnails.length > 0 
               ? info.videoDetails.thumbnails[info.videoDetails.thumbnails.length - 1].url 
               : null,
@@ -243,8 +244,8 @@ class YouTubeMusicPlugin extends ExtractorPlugin {
             playFromSource: true,
             plugin: this,
             member: options.member || null,
-            metadata: options.metadata || null,
-          });
+            metadata: options.metadata || null
+          }, options);
           
           return song;
           
@@ -272,12 +273,13 @@ class YouTubeMusicPlugin extends ExtractorPlugin {
       try {
         if (!track || !track.videoId) return null;
         
-        // Create a Song object directly
+        // Create a Song object and pass options directly
+        // DisTube will handle user information from options
         return new Song({
           source: "youtube-music",
           id: track.videoId,
           name: track.title || "Unknown Title",
-          url: `https://www.youtube.com/watch?v=${track.videoId}`,
+          url: `https://music.youtube.com/watch?v=${track.videoId}`,
           thumbnail: track.thumbnails && track.thumbnails.length > 0 
             ? track.thumbnails[track.thumbnails.length - 1].url 
             : null,
@@ -290,8 +292,8 @@ class YouTubeMusicPlugin extends ExtractorPlugin {
           playFromSource: true,
           plugin: this,
           member: options.member || null,
-          metadata: options.metadata || null,
-        });
+          metadata: options.metadata || null
+        }, options);
       } catch (err) {
         console.error(`Error processing track ${track?.videoId || 'unknown'}:`, err);
         return null;
@@ -335,8 +337,9 @@ class YouTubeMusicPlugin extends ExtractorPlugin {
         return null;
       }
 
-      // Create a Song object directly
-      const song = new Song({
+      // Create a Song object following DisTube standard pattern like YouTube plugin
+      // DisTube will handle the user data from options.member automatically
+      return new Song({
         source: "youtube-music",
         id: firstResult.videoId,
         name: firstResult.name || "Unknown Title",
@@ -353,10 +356,8 @@ class YouTubeMusicPlugin extends ExtractorPlugin {
         playFromSource: true,
         plugin: this,
         member: options.member || null,
-        metadata: options.metadata || null,
-      });
-      
-      return song;
+        metadata: options.metadata || null
+      }, options);
     } catch (e) {
       console.error("Search error:", e);
       return null;
@@ -376,7 +377,7 @@ class YouTubeMusicPlugin extends ExtractorPlugin {
     try {
       console.log(`Getting stream URL for song ID: ${song.id}`);
       // Get the format info without downloading
-      const info = await ytdl.getInfo(`https://www.youtube.com/watch?v=${song.id}`);
+      const info = await ytdl.getInfo(`https://music.youtube.com/watch?v=${song.id}`);
       const format = ytdl.chooseFormat(info.formats, {
         filter: "audioonly",
         quality: "highestaudio",
@@ -420,11 +421,12 @@ class YouTubeMusicPlugin extends ExtractorPlugin {
       for (const track of related.tracks) {
         if (!track || !track.videoId) continue;
         
+        // Membuat Song object dengan pola standar
         songs.push(new Song({
           source: "youtube-music",
           id: track.videoId,
           name: track.title || "Unknown Title",
-          url: `https://www.youtube.com/watch?v=${track.videoId}`,
+          url: `https://music.youtube.com/watch?v=${track.videoId}`,
           thumbnail: track.thumbnails && track.thumbnails.length > 0 
             ? track.thumbnails[track.thumbnails.length - 1].url 
             : null,
@@ -435,7 +437,7 @@ class YouTubeMusicPlugin extends ExtractorPlugin {
               : "Unknown Artist"
           },
           playFromSource: true,
-          plugin: this,
+          plugin: this
         }));
       }
 
