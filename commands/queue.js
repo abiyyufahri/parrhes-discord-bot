@@ -13,16 +13,16 @@ module.exports = {
 
      const queue = client.player.getQueue(interaction.guild.id);
       if (!queue || !queue.playing) return interaction.reply({ content: lang.msg5, ephemeral: true }).catch(e => { })
-      if (!queue.songs[0]) return interaction.reply({ content: lang.msg63, ephemeral: true }).catch(e => { })
+      if (!queue.songs || !Array.isArray(queue.songs) || !queue.songs.length) return interaction.reply({ content: lang.msg63, ephemeral: true }).catch(e => { })
 
       const trackl = []
       queue.songs.map(async (track, i) => {
         trackl.push({
-          title: track.name,
-          author: track.uploader.name,
-          user: track.user,
-          url: track.url,
-          duration: track.duration
+          title: track.name || "Unknown Title",
+          author: track.uploader?.name || "Unknown Author",
+          user: track.user || { id: "unknown" },
+          url: track.url || "#",
+          duration: track.duration || 0
         })
       })
 
@@ -59,10 +59,12 @@ module.exports = {
           .setTitle(`${lang.msg64} - ${interaction.guild.name}`)
           .setThumbnail(interaction.guild.iconURL({ size: 2048, dynamic: true }))
           .setColor(client.config.embedColor)
-          .setDescription(`${lang.msg65}: \`${queue.songs[0].name}\`
-    ${current.map(data =>
-            `\n\`${sayı++}\` | [${data.title}](${data.url}) | **${data.author}** (${lang.msg66} <@${data.user.id}>)`
-          )}`)
+          .setDescription(`${lang.msg65}: \`${queue.songs[0]?.name || "Unknown"}\`
+    ${current.map(data => {
+            // Safely handle user mention
+            const userMention = data.user && data.user.id !== "unknown" ? `<@${data.user.id}>` : "Unknown User";
+            return `\n\`${sayı++}\` | [${data.title}](${data.url}) | **${data.author}** (${lang.msg66} ${userMention})`;
+          }).join("")}`)
           .setFooter({ text: `${lang.msg67} ${page}/${Math.floor(a + 1)}` })
       }
 

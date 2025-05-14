@@ -9,7 +9,6 @@ if (config.shardManager.shardStatus == true) {
   manager.spawn();
 
 } else {
-
   require("./bot.js")
 
 }

@@ -172,6 +172,8 @@ module.exports = {
           console.error("Error sending loading message:", e);
         });
 
+        console.log(`[DEBUG][/play] Loading Embed: ${loadingMessage.id}`)
+
         try {
           // DisTube dapat langsung menangani berbagai sumber termasuk Spotify 
           // dengan bantuan plugin yang sudah diatur di bot.js
@@ -180,7 +182,8 @@ module.exports = {
             textChannel: interaction.channel,
             metadata: {
               interaction: interaction,
-              loadingMessage: loadingMessage
+              loadingMessage: loadingMessage,
+              isPlaylist: name.includes("playlist") || name.includes("album") || name.includes("list=") // Deteksi playlist
             }
           });
           

@@ -10,6 +10,7 @@ module.exports = async (client, queue, song) => {
   
   // Debug song object to understand available properties
   console.log(`[DEBUG] Song details:`, {
+
     name: song?.name,
     url: song?.url,
     formattedDuration: song?.formattedDuration,
@@ -59,21 +60,117 @@ module.exports = async (client, queue, song) => {
           .setTimestamp()
 
         // Send notification that music is being played
-        const playSongMessage = await song.metadata?.loadingMessage.edit({ embeds: [embed] });
-        console.log(`[DEBUG] playSong message sent successfully: ${playSongMessage.id}`);
-
-        // Delete the loading message if it exists in metadata
-        if (queue.metadata?.loadingMessage) {
+        console.log(`[DEBUG] Embed: ${queue.metadata?.loadingMessage}`);
+        console.log(`[DEBUG] playSong message sent successfully: AA`);
+        
+        // Coba ambil loadingMessage dari queue.metadata atau song.metadata
+        const loadingMessage = song.metadata?.loadingMessage || queue.metadata?.loadingMessage;
+        console.log(`[DEBUG][playSong.js] Loading Embed: ${loadingMessage?.id || 'not found'}`);
+        
+        // Perbarui pesan loading jika tersedia
+        if (loadingMessage && typeof loadingMessage.edit === 'function') {
+          // Untuk lagu dalam playlist, selalu kirim pesan baru untuk now playing
+          // sehingga tidak menimpa pesan playlist
           try {
-            await queue.metadata.loadingMessage.delete();
-            console.log(`[DEBUG] Deleted loading message: ${queue.metadata.loadingMessage.id}`);
-            // Optionally, clear it from metadata if it won't be used again or if metadata is reused for other things
-            // queue.metadata.loadingMessage = null; 
-          } catch (deleteError) {
-            console.error(`[DEBUG] Failed to delete loading message:`, deleteError);
+            // Kirim pesan baru untuk semua lagu (termasuk lagu pertama)
+            const newMessage = await queue.textChannel.send({ embeds: [embed] });
+            console.log(`[DEBUG] Sent new playSong message: ${newMessage.id}`);
+            
+            // NONAKTIFKAN edit pesan yang sudah ada
+            // // Cek apakah ini lagu pertama dari playlist. Jika ya, jangan edit loadingMessage
+            // // tapi kirim pesan baru, agar tidak menimpa pesan playlist
+            // if (queue.songs.length <= 1) {
+            //   try {
+            //     await queue.textChannel.send({ embeds: [embed] });
+            //     console.log(`[DEBUG] Sent new playSong message for first song`);
+            //   } catch (sendError) {
+            //     console.error(`[DEBUG] Error sending new message for first song:`, sendError);
+            //   }
+            // } else {
+            //   // Untuk lagu selain lagu pertama, edit loadingMessage
+            //   try {
+            //     // Cek apakah pesan masih valid dengan mengecek properti atau metode
+            //     const isValidMessage = loadingMessage.channelId && !loadingMessage.deleted;
+            //     
+            //     if (isValidMessage) {
+            //       const playSongMessage = await loadingMessage.edit({ embeds: [embed] }).catch(err => {
+            //         // Jika error Unknown Message, kirim pesan baru
+            //         if (err.code === 10008) {
+            //           console.log(`[DEBUG] Message not found, sending new message instead`);
+            //           return queue.textChannel.send({ embeds: [embed] });
+            //         }
+            //         throw err; // Re-throw jika bukan Unknown Message error
+            //       });
+            //       
+            //       if (playSongMessage) {
+            //          console.log(`[DEBUG] playSong message edited successfully: ${playSongMessage.id}`);
+            //       }
+            //     } else {
+            //       // Jika pesan tidak valid, kirim pesan baru
+            //       const newMessage = await queue.textChannel.send({ embeds: [embed] });
+            //       console.log(`[DEBUG] Sent new message because original was invalid: ${newMessage.id}`);
+            //     }
+            //   } catch (editError) {
+            //     console.error(`[DEBUG] Error editing loading message:`, editError);
+            //     // Coba kirim pesan baru jika gagal mengedit
+            //     try {
+            //       await queue.textChannel.send({ embeds: [embed] });
+            //     } catch (sendError) {
+            //       console.error(`[DEBUG] Error sending new message:`, sendError);
+            //     }
+            //   }
+            // }
+          } catch (sendError) {
+            console.error(`[DEBUG] Error sending new playSong message:`, sendError);
+          }
+        } else {
+          // Jika tidak ada loadingMessage, kirim pesan baru
+          try {
+            await queue.textChannel.send({ embeds: [embed] });
+            console.log(`[DEBUG] Sent new playSong message`);
+          } catch (sendError) {
+            console.error(`[DEBUG] Error sending new message:`, sendError);
           }
         }
+
+        // Delete the loading message if it exists in metadata and it's not the first song in a playlist
+        // Jangan hapus jika this is first song (queue.songs.length <= 1)
+        // PENTING: Untuk playlist, kita tidak perlu menghapus pesan sama sekali
+        // Sebagai gantinya, kita simpan ID pesan playlist di queue.metadata
         
+        // Nonaktifkan penghapusan pesan
+        // if (loadingMessage && typeof loadingMessage.delete === 'function' && queue.songs.length > 1) {
+        //   try {
+        //     // Cek apakah pesan masih valid sebelum dihapus
+        //     const isValidMessage = loadingMessage.channelId && !loadingMessage.deleted;
+        //     
+        //     if (isValidMessage) {
+        //       await loadingMessage.delete().catch(err => {
+        //         // Jika error Unknown Message, abaikan saja
+        //         if (err.code === 10008) {
+        //           console.log(`[DEBUG] Message not found when trying to delete, ignoring`);
+        //           return;
+        //         }
+        //         throw err; // Re-throw jika bukan Unknown Message error
+        //       });
+        //       console.log(`[DEBUG] Deleted loading message: ${loadingMessage.id} (not first song)`);
+        //     } else {
+        //       console.log(`[DEBUG] Skipped deleting invalid message`);
+        //     }
+        //   } catch (deleteError) {
+        //     console.error(`[DEBUG] Failed to delete loading message:`, deleteError);
+        //   }
+        // } else if (loadingMessage) {
+        //   console.log(`[DEBUG] Kept loading message for first song: ${loadingMessage?.id || 'unknown'}`);
+        // }
+
+        // Simpan loadingMessage ID di queue.metadata jika belum ada
+        if (loadingMessage && loadingMessage.id && !queue.metadata?.playlistMessageId) {
+          queue.metadata = queue.metadata || {};
+          queue.metadata.playlistMessageId = loadingMessage.id;
+          console.log(`[DEBUG] Saved playlist message ID: ${loadingMessage.id}`);
+        }
+
         // Verification check that song is actually playing
         setTimeout(async () => {
           try {

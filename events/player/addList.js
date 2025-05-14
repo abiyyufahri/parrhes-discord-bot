@@ -56,11 +56,102 @@ module.exports = async (client, queue, playlist) => {
       .setFooter({ text: client.user.username, iconURL: client.user.displayAvatarURL() });
   }
   
-  playlist.metadata?.loadingMessage.edit({
-      content: isSpotify ? null : `<@${playlist.user.id}>`,
-      embeds: [playlistEmbed]
-    })
-    .catch((e) => {});
+  // Cek apakah loadingMessage masih valid
+  if (playlist.metadata?.loadingMessage && typeof playlist.metadata.loadingMessage.edit === 'function') {
+    try {
+      // Cek apakah pesan masih valid
+      const isValidMessage = playlist.metadata.loadingMessage.channelId && !playlist.metadata.loadingMessage.deleted;
+      
+      if (isValidMessage) {
+        const playlistMessage = await playlist.metadata.loadingMessage.edit({
+          content: isSpotify ? null : `<@${playlist.user.id}>`,
+          embeds: [playlistEmbed]
+        }).catch(err => {
+          // Jika error Unknown Message, kirim pesan baru
+          if (err.code === 10008) {
+            console.log(`[DEBUG][addList.js] Message not found, sending new message instead`);
+            if (queue && queue.textChannel) {
+              return queue.textChannel.send({
+                content: isSpotify ? null : `<@${playlist.user.id}>`,
+                embeds: [playlistEmbed]
+              });
+            }
+          }
+          console.error(`[DEBUG][addList.js] Error editing message:`, err);
+        });
+        
+        // Simpan playlistMessage di queue.metadata
+        if (playlistMessage && queue) {
+          queue.metadata = queue.metadata || {};
+          queue.metadata.playlistMessage = playlistMessage;
+          queue.metadata.playlistMessageId = playlistMessage.id;
+          console.log(`[DEBUG][addList.js] Saved playlist message in queue metadata: ${playlistMessage.id}`);
+        }
+      } else {
+        // Jika pesan tidak valid dan ada queue, kirim pesan baru
+        if (queue && queue.textChannel) {
+          const newMessage = await queue.textChannel.send({
+            content: isSpotify ? null : `<@${playlist.user.id}>`,
+            embeds: [playlistEmbed]
+          });
+          
+          // Simpan pesan baru di queue.metadata
+          if (newMessage && queue) {
+            queue.metadata = queue.metadata || {};
+            queue.metadata.playlistMessage = newMessage;
+            queue.metadata.playlistMessageId = newMessage.id;
+            console.log(`[DEBUG][addList.js] Saved new playlist message in queue metadata: ${newMessage.id}`);
+          }
+          
+          console.log(`[DEBUG][addList.js] Sent new message because original was invalid`);
+        }
+      }
+    } catch (e) {
+      console.error(`[DEBUG][addList.js] Error handling message:`, e);
+      
+      // Coba kirim pesan baru jika terjadi error dan ada queue
+      if (queue && queue.textChannel) {
+        try {
+          const errorMessage = await queue.textChannel.send({
+            content: isSpotify ? null : `<@${playlist.user.id}>`,
+            embeds: [playlistEmbed]
+          });
+          
+          // Simpan errorMessage di queue.metadata
+          if (errorMessage) {
+            queue.metadata = queue.metadata || {};
+            queue.metadata.playlistMessage = errorMessage;
+            queue.metadata.playlistMessageId = errorMessage.id;
+            console.log(`[DEBUG][addList.js] Saved error playlist message in queue metadata: ${errorMessage.id}`);
+          }
+        } catch (sendError) {
+          console.error(`[DEBUG][addList.js] Error sending new message:`, sendError);
+        }
+      }
+    }
+  } else {
+    // Jika tidak ada loadingMessage, kirim pesan baru jika ada queue
+    if (queue && queue.textChannel) {
+      try {
+        const newPlaylistMessage = await queue.textChannel.send({
+          content: isSpotify ? null : `<@${playlist.user.id}>`,
+          embeds: [playlistEmbed]
+        });
+        
+        // Simpan newPlaylistMessage di queue.metadata
+        if (newPlaylistMessage) {
+          queue.metadata = queue.metadata || {};
+          queue.metadata.playlistMessage = newPlaylistMessage;
+          queue.metadata.playlistMessageId = newPlaylistMessage.id;
+          console.log(`[DEBUG][addList.js] Saved new playlist message in queue metadata: ${newPlaylistMessage.id}`);
+        }
+        
+        console.log(`[DEBUG][addList.js] Sent new playlist message`);
+      } catch (sendError) {
+        console.error(`[DEBUG][addList.js] Error sending new message:`, sendError);
+      }
+    }
+  }
 };
 
 // Fungsi untuk menentukan platform berdasarkan data playlist

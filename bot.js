@@ -4,6 +4,7 @@ const { SpotifyPlugin } = require("@distube/spotify")
 const { SoundCloudPlugin } = require("@distube/soundcloud")
 const { DeezerPlugin } = require("@distube/deezer")
 const { YouTubePlugin } = require("@distube/youtube")
+const YouTubeMusicPlugin = require("./plugins/ytmusicPlugin")
 const config = require("./config.js")
 const fs = require("fs")
 
@@ -44,9 +45,8 @@ client.player = new DisTube(client, {
   // Opsi valid menurut dokumentasi DisTube v5
     
   plugins: [
-    new DeezerPlugin(),
-    new YouTubePlugin({
-    }),
+    // new YouTubePlugin(),
+    new YouTubeMusicPlugin(),
     new SpotifyPlugin({
       api: {
         clientId: client.config.spotify?.clientId,
