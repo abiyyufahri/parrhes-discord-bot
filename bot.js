@@ -4,9 +4,12 @@ const { SpotifyPlugin } = require("@distube/spotify")
 const { SoundCloudPlugin } = require("@distube/soundcloud")
 const { DeezerPlugin } = require("@distube/deezer")
 const { YouTubePlugin } = require("@distube/youtube")
-const YouTubeMusicPlugin = require("./plugins/ytmusicPlugin")
+const YouTubeMusicPlugin = require("ytmusic-distube-plugin")
 const config = require("./config.js")
 const fs = require("fs")
+const dotenv = require("dotenv")
+
+dotenv.config();
 
 // Import ffmpeg-static to register its path in the environment
 const ffmpegPath = require("ffmpeg-static")

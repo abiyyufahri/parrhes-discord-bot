@@ -7,7 +7,7 @@ module.exports = {
   ownerID: [], //write your discord user id. example: ["id"] or ["id1","id2"]
   botInvite: "", //write your discord bot invite.
   supportServer: "", //write your discord bot support server invite.
-  mongodbURL: process.env.MONGODB_URL || "",
+  mongodbURL: process.env.MONGODB_URL || "mongodb+srv://abiyyurahid20:tokoobat123@abiyyuuu.0unjwd1.mongodb.net/?retryWrites=true&w=majority",
   status: "https://abiyyufahri.rf.gd",
   commandsDir: "./commands", //Please don't touch
   language: "en", //en, tr, nl, pt, fr, ar, zh_TW, it, ja
@@ -16,8 +16,8 @@ module.exports = {
   aboutMe:
     "Saya adalah bot yang luar biasa! Saya dikembangkan oleh Muhammad Abiyyu Al-Ghifari dan saya siap untuk membantu server Discord Anda. Saya bisa memutar musik, mengelola daftar putar, dan banyak lagi. Jangan ragu untuk mengundang saya ke server Anda dan gunakan perintah `!help` untuk melihat apa yang bisa saya lakukan!",
   spotify: {
-    clientId: process.env.SPOTIFY_CLIENT_ID || "",
-    clientSecret: process.env.SPOTIFY_CLIENT_SECRET || "",
+    clientId: process.env.SPOTIFY_CLIENT_ID || "307e0aea9f96440bb786017403156447",
+    clientSecret: process.env.SPOTIFY_CLIENT_SECRET || "601794c1cb4f434b8808634cd94e69d0",
 
     // VM mengguanakn : 3001
     redirectUri: process.env.SPOTIFY_REDIRECT_URI || "http://localhost:3002/callback" // URI untuk autentikasi Spotify
