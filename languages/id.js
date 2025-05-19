@@ -160,6 +160,8 @@ const language = {
   spotify_desc: "Musik dari playlist Spotify ini diambil langsung dari Spotify API dan diputar melalui bot. Audio berkualitas tinggi dengan metadata lengkap seperti judul, artis, dan album yang akurat.",
   youtube_desc: "Playlist ini diambil dari YouTube dengan kualitas audio terbaik yang tersedia. Semua fitur YouTube seperti video dengan timestamp, playlist custom, dan live stream didukung.",
   soundcloud_desc: "Musik dari SoundCloud diputar dengan kualitas tinggi dan mendukung semua fitur SoundCloud seperti track original, remix, dan repost dari kreator.",
+  custom_playlist: "Playlist Kustom",
+  custom_playlist_desc: "Playlist kustom yang Anda buat dan atur sendiri. Koleksi musik dari berbagai sumber yang Anda simpan untuk dinikmati kapan saja.",
   added_by: "Ditambahkan oleh",
   songs: "lagu",
   music_playlist: "Playlist Musik",

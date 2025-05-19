@@ -160,6 +160,8 @@ const language = {
   spotify_desc: "Music from this Spotify playlist is taken directly from the Spotify API and played through the bot. High-quality audio with complete metadata such as title, artist, and accurate album.",
   youtube_desc: "This playlist is taken from YouTube with the best available audio quality. All YouTube features such as videos with timestamps, custom playlists, and live streams are supported.",
   soundcloud_desc: "Music from SoundCloud is played in high quality and supports all SoundCloud features such as original tracks, remixes, and reposts from creators.",
+  custom_playlist: "Custom Playlist",
+  custom_playlist_desc: "A custom playlist that you create and organize yourself. Collection of music from various sources that you save to enjoy anytime.",
   added_by: "Added by",
   songs: "songs",
   music_playlist: "Music Playlist",
