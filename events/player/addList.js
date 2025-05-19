@@ -8,10 +8,11 @@ module.exports = async (client, queue, playlist) => {
   lang = lang?.language || client.language;
   lang = require(`../../languages/${lang}.js`);
   
-  // Cek apakah playlist dari Spotify
-  const isSpotify = playlist.name.toLowerCase().includes('spotify') || 
-                  (playlist.url && playlist.url.includes('spotify')) || 
-                  playlist.source === 'spotify';
+  // Deteksi sumber playlist
+  const isSpotify = playlist.source === 'spotify';
+  const isCustom = playlist.source === 'custom';
+  const isYouTube = playlist.source === 'youtube' || playlist.source === 'youtube-music';
+  const isSoundCloud = playlist.source === 'soundcloud';
   
   let playlistEmbed;
   
@@ -23,24 +24,40 @@ module.exports = async (client, queue, playlist) => {
       .setTitle(playlist.name)
       .addFields(
         { name: lang.enqueued, value: `${playlist.songs.length} ${lang.songs}`, inline: true },
-        { name: lang.owner, value: `${playlist.user.username || 'Unknown'}`, inline: true },
-        { name: lang.playlist_link, value: `[${lang.click_here}](https://discord.com)`, inline: true }
+        { name: lang.owner, value: `${playlist.user?.username || 'Unknown'}`, inline: true },
+        { name: lang.duration, value: playlist.formattedDuration || '00:00', inline: true }
       )
       .setDescription(lang.spotify_desc)
       .setThumbnail(playlist.thumbnail || playlist.songs[0]?.thumbnail || "https://i.imgur.com/JSosB9H.png");
+  } else if (isCustom) {
+    // Desain untuk playlist kustom
+    playlistEmbed = new EmbedBuilder()
+      .setColor("#3498DB") // Biru default
+      .setAuthor({ name: lang.custom_playlist, iconURL: client.user.displayAvatarURL() })
+      .setTitle(playlist.name)
+      .addFields(
+        { name: lang.enqueued, value: `${playlist.songs.length} ${lang.songs}`, inline: true },
+        { name: lang.owner, value: `${playlist.user?.username || playlist.member?.user?.username || 'Unknown'}`, inline: true },
+        { name: lang.duration, value: playlist.formattedDuration || '00:00', inline: true }
+      )
+      .setDescription(`${lang.custom_playlist_desc}`)
+      .setThumbnail(playlist.thumbnail || playlist.songs[0]?.thumbnail || "https://i.imgur.com/JSosB9H.png")
+      .setFooter({ text: client.user.username, iconURL: client.user.displayAvatarURL() });
   } else {
     // Desain untuk platform lainnya (YouTube, SoundCloud, dll)
-    const platformName = getPlatformName(playlist);
-    const platformColor = getPlatformColor(playlist);
-    const platformIcon = getPlatformIcon(playlist);
+    const platformName = isYouTube ? 'YouTube' : isSoundCloud ? 'SoundCloud' : 'Music';
+    const platformColor = isYouTube ? '#FF0000' : isSoundCloud ? '#FF7700' : '#3498DB';
+    const platformIcon = isYouTube ? 'https://cdn3.emoji.gg/emojis/33006-youtube-music.png' : 
+                        isSoundCloud ? 'https://cdn3.emoji.gg/emojis/27987-soundcloud.png' : 
+                        'https://i.imgur.com/JSosB9H.png';
     
     // Deskripsi khusus berdasarkan platform
     let platformDescription = `${lang.msg62}`;
     
-    if (platformName === 'YouTube') {
-      platformDescription = lang.youtube_desc;
-    } else if (platformName === 'SoundCloud') {
-      platformDescription = lang.soundcloud_desc;
+    if (isYouTube) {
+      platformDescription = lang.youtube_desc || `${lang.msg62}`;
+    } else if (isSoundCloud) {
+      platformDescription = lang.soundcloud_desc || `${lang.msg62}`;
     }
     
     playlistEmbed = new EmbedBuilder()
@@ -49,7 +66,8 @@ module.exports = async (client, queue, playlist) => {
       .setTitle(playlist.name)
       .addFields(
         { name: lang.msg116, value: `${playlist.songs.length}`, inline: true },
-        { name: lang.added_by, value: `${playlist.user.username || 'Unknown'}`, inline: true }
+        { name: lang.added_by, value: `${playlist.user?.username || playlist.member?.user?.username || 'Unknown'}`, inline: true },
+        { name: lang.duration, value: playlist.formattedDuration || '00:00', inline: true }
       )
       .setDescription(platformDescription)
       .setImage(playlist.thumbnail || playlist.songs[0]?.thumbnail || "https://i.imgur.com/JSosB9H.png")
@@ -64,7 +82,7 @@ module.exports = async (client, queue, playlist) => {
       
       if (isValidMessage) {
         const playlistMessage = await playlist.metadata.loadingMessage.edit({
-          content: isSpotify ? null : `<@${playlist.user.id}>`,
+          content: isSpotify ? null : `<@${playlist.user?.id || playlist.member?.id}>`,
           embeds: [playlistEmbed]
         }).catch(err => {
           // Jika error Unknown Message, kirim pesan baru
@@ -72,7 +90,7 @@ module.exports = async (client, queue, playlist) => {
             console.log(`[DEBUG][addList.js] Message not found, sending new message instead`);
             if (queue && queue.textChannel) {
               return queue.textChannel.send({
-                content: isSpotify ? null : `<@${playlist.user.id}>`,
+                content: isSpotify ? null : `<@${playlist.user?.id || playlist.member?.id}>`,
                 embeds: [playlistEmbed]
               });
             }
@@ -85,13 +103,12 @@ module.exports = async (client, queue, playlist) => {
           queue.metadata = queue.metadata || {};
           queue.metadata.playlistMessage = playlistMessage;
           queue.metadata.playlistMessageId = playlistMessage.id;
-          console.log(`[DEBUG][addList.js] Saved playlist message in queue metadata: ${playlistMessage.id}`);
         }
       } else {
         // Jika pesan tidak valid dan ada queue, kirim pesan baru
         if (queue && queue.textChannel) {
           const newMessage = await queue.textChannel.send({
-            content: isSpotify ? null : `<@${playlist.user.id}>`,
+            content: isSpotify ? null : `<@${playlist.user?.id || playlist.member?.id}>`,
             embeds: [playlistEmbed]
           });
           
@@ -100,10 +117,7 @@ module.exports = async (client, queue, playlist) => {
             queue.metadata = queue.metadata || {};
             queue.metadata.playlistMessage = newMessage;
             queue.metadata.playlistMessageId = newMessage.id;
-            console.log(`[DEBUG][addList.js] Saved new playlist message in queue metadata: ${newMessage.id}`);
           }
-          
-          console.log(`[DEBUG][addList.js] Sent new message because original was invalid`);
         }
       }
     } catch (e) {
@@ -113,7 +127,7 @@ module.exports = async (client, queue, playlist) => {
       if (queue && queue.textChannel) {
         try {
           const errorMessage = await queue.textChannel.send({
-            content: isSpotify ? null : `<@${playlist.user.id}>`,
+            content: isSpotify ? null : `<@${playlist.user?.id || playlist.member?.id}>`,
             embeds: [playlistEmbed]
           });
           
@@ -122,7 +136,6 @@ module.exports = async (client, queue, playlist) => {
             queue.metadata = queue.metadata || {};
             queue.metadata.playlistMessage = errorMessage;
             queue.metadata.playlistMessageId = errorMessage.id;
-            console.log(`[DEBUG][addList.js] Saved error playlist message in queue metadata: ${errorMessage.id}`);
           }
         } catch (sendError) {
           console.error(`[DEBUG][addList.js] Error sending new message:`, sendError);
@@ -134,7 +147,7 @@ module.exports = async (client, queue, playlist) => {
     if (queue && queue.textChannel) {
       try {
         const newPlaylistMessage = await queue.textChannel.send({
-          content: isSpotify ? null : `<@${playlist.user.id}>`,
+          content: isSpotify ? null : `<@${playlist.user?.id || playlist.member?.id}>`,
           embeds: [playlistEmbed]
         });
         
@@ -143,10 +156,7 @@ module.exports = async (client, queue, playlist) => {
           queue.metadata = queue.metadata || {};
           queue.metadata.playlistMessage = newPlaylistMessage;
           queue.metadata.playlistMessageId = newPlaylistMessage.id;
-          console.log(`[DEBUG][addList.js] Saved new playlist message in queue metadata: ${newPlaylistMessage.id}`);
         }
-        
-        console.log(`[DEBUG][addList.js] Sent new playlist message`);
       } catch (sendError) {
         console.error(`[DEBUG][addList.js] Error sending new message:`, sendError);
       }

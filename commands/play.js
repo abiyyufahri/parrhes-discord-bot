@@ -84,8 +84,32 @@ module.exports = {
             const songs = [];
             music_filter.map((m) => songs.push(m.music_url));
 
+            console.log(songs);
+
             try {
-              await client.player.play(interaction.member.voice.channel, songs, {
+              // Membuat thumbnail dan totalDuration untuk playlist dari musik yang ada
+              const thumbnail = music_filter.find(m => m.music_thumbnail)?.music_thumbnail || null;
+              const totalDuration = music_filter.reduce((total, song) => {
+                return total + (song.music_duration || 0);
+              }, 0);
+              
+              // Membuat playlist kustom menggunakan DisTube
+              const customPlaylist = await client.player.createCustomPlaylist(
+                songs, 
+                {
+                  member: interaction.member,
+                  metadata: {
+                    interaction: interaction,
+                    source: "custom",
+                  },
+                  name: playlistw,
+                  source: "custom",
+                  thumbnail: thumbnail
+                }
+              );
+              
+              // Memutar playlist custom yang telah dibuat
+              await client.player.play(interaction.member.voice.channel, customPlaylist, {
                 member: interaction.member,
                 textChannel: interaction.channel,
                 metadata: {
@@ -130,6 +154,17 @@ module.exports = {
                             public: p.public,
                             plays: Number(p.plays) + 1,
                             createdTime: p.createdTime,
+                            // Menambah properti baru sesuai DisTube Playlist struct
+                            songs: music_filter.map(m => ({
+                              url: m.music_url,
+                              name: m.music_title || m.music_name || "Unknown",
+                              thumbnail: m.music_thumbnail || null,
+                              duration: m.music_duration || 0,
+                              source: m.music_source || "youtube"
+                            })),
+                            source: "custom",
+                            duration: totalDuration,
+                            formattedDuration: formatDuration(totalDuration)
                           },
                         },
                       },
@@ -227,3 +262,18 @@ module.exports = {
     }
   },
 };
+
+// Fungsi pembantu untuk format durasi
+function formatDuration(seconds) {
+  if (isNaN(seconds) || seconds < 0) return "00:00";
+  
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+  
+  if (hours > 0) {
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  } else {
+    return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  }
+}

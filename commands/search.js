@@ -37,9 +37,10 @@ module.exports = {
 
       try {
         // Perform YouTube search using the new YouTubePlugin
-        const searchResults = await client.player.search(query, { 
-          limit: 10, 
-          type: "video" 
+        const plugin = client.player.plugins.find(p => p instanceof YouTubeMusicPlugin);
+        
+        const searchResults = await plugin.searchSongs(query, { 
+          limit: 3
         });
 
         // If no results found
