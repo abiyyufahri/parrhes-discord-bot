@@ -2,61 +2,47 @@ const db = require("../../mongoDB");
 const { EmbedBuilder } = require('discord.js');
 
 module.exports = async (client, queue, song) => {
-  // Menampilkan panjang queue sebelum lagu ditambahkan
-  console.log(`[QUEUE INFO] Panjang queue saat ini: ${queue?.songs?.length || 0} lagu`);
+  // Track event ini untuk debugging
+  console.log(`[QUEUE INFO] Panjang queue saat ini: ${queue.songs.length} lagu`);
   
-  let lang = await db?.musicbot?.findOne({
-    guildID: queue?.textChannel?.guild?.id,
-  });
-  lang = lang?.language || client.language;
-  lang = require(`../../languages/${lang}.js`);
+  // Pastikan tidak ada operasi berat yang dijalankan di sini
+  if (!song || !queue) return;
   
-  if (queue) {
-    if (!client.config.opt.loopMessage && queue?.repeatMode !== 0) return;
+  try {
+    // Deteksi apakah lagu berasal dari permintaan baru atau playlist
+    const { isPlaylist, interaction } = queue.metadata || {};
     
-    if (queue?.textChannel) {
+    // Jika ini bukan playlist (single song) dan bukan lagu pertama, kirim pesan konfirmasi
+    if (!isPlaylist && queue.songs.length > 1) {
+      // Dapatkan judul lagu yang akan diputar berikutnya dari queue
       const embed = new EmbedBuilder()
-        .setColor('#F7A531') // Set the color of the embed
-        .setDescription(`<@${song.user.id}>, **${song.name}** ${lang.msg79} <:musicadded:1166423244316889088>`)
-
-      // Cek apakah ada metadata dan loadingMessage
-      if (song.metadata?.loadingMessage && typeof song.metadata.loadingMessage.edit === 'function') {
+        .setAuthor({ name: 'Lagu Ditambahkan ke Queue', iconURL: client.user.displayAvatarURL() })
+        .setColor('#ffa954')
+        .setThumbnail(song.thumbnail)
+        .setDescription(`[${song.name}](${song.url})`)
+        .addFields(
+          { name: 'Durasi', value: song.formattedDuration || '00:00', inline: true },
+          { name: 'Ditambahkan oleh', value: `<@${song.user.id}>`, inline: true },
+          { name: 'Posisi di Queue', value: `${queue.songs.indexOf(song)}/${queue.songs.length}`, inline: true }
+        )
+        .setFooter({ text: `${client.user.username} • Music Bot` });
+      
+      // Kirimkan pesan konfirmasi dengan efisien
+      // Gunakan interaction jika tersedia, jika tidak gunakan textChannel
+      if (interaction && !interaction.replied) {
         try {
-          // Cek apakah pesan masih valid
-          const isValidMessage = song.metadata.loadingMessage.channelId && !song.metadata.loadingMessage.deleted;
-          
-          if (isValidMessage) {
-            await song.metadata.loadingMessage.edit({ embeds: [embed] }).catch(err => {
-              // Jika error Unknown Message, kirim pesan baru
-              if (err.code === 10008) {
-                console.log(`[DEBUG][addSong.js] Message not found, sending new message instead`);
-                return queue.textChannel.send({ embeds: [embed] });
-              }
-              throw err; // Re-throw jika bukan Unknown Message error
-            });
-          } else {
-            // Jika pesan tidak valid, kirim pesan baru
-            await queue.textChannel.send({ embeds: [embed] });
-            console.log(`[DEBUG][addSong.js] Sent new message because original was invalid`);
-          }
+          await interaction.editReply({ embeds: [embed] }).catch(e => {});
         } catch (e) {
-          console.error(`[DEBUG][addSong.js] Error handling message:`, e);
-          // Coba kirim pesan baru jika terjadi error
-          try {
-            await queue.textChannel.send({ embeds: [embed] });
-          } catch (sendError) {
-            console.error(`[DEBUG][addSong.js] Error sending new message:`, sendError);
+          if (queue.textChannel) {
+            queue.textChannel.send({ embeds: [embed] }).catch(e => {});
           }
         }
-      } else {
-        // Jika tidak ada loadingMessage, kirim pesan baru
-        try {
-          await queue.textChannel.send({ embeds: [embed] });
-          console.log(`[DEBUG][addSong.js] Sent new added song message`);
-        } catch (sendError) {
-          console.error(`[DEBUG][addSong.js] Error sending new message:`, sendError);
-        }
+      } else if (queue.textChannel) {
+        queue.textChannel.send({ embeds: [embed] }).catch(e => {});
       }
     }
+  } catch (e) {
+    console.error('Error in addSong event:', e);
+    // Jangan crash event handler meskipun ada error
   }
 };

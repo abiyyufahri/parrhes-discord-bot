@@ -1,6 +1,7 @@
 const { ApplicationCommandOptionType, EmbedBuilder } = require("discord.js");
 const db = require("../mongoDB");
 const { errorNotifer } = require("../functions.js");
+const config = require("../config");
 
 module.exports = {
   name: "play",
@@ -37,31 +38,51 @@ module.exports = {
   voiceChannel: true,
   run: async (client, interaction) => {
     try {
+      // Mendapatkan pengaturan bahasa
+      const defaultLang = client.language || "en";
+      let lang;
+      
+      try {
+        const guildData = await db?.musicbot?.findOne({ guildID: interaction.guild.id });
+        lang = require(`../languages/${guildData?.language || defaultLang}.js`);
+      } catch (e) {
+        // Fallback to default language if any error
+        lang = require(`../languages/${defaultLang}.js`);
+        console.error("Error loading language, using default:", e);
+      }
+      
       // PENTING: Gunakan deferReply di awal untuk mencegah timeout
-      await interaction.deferReply().catch(e => {
+      try {
+        await interaction.deferReply();
+      } catch (e) {
+        // Mungkin interaksi sudah di-reply atau defer sebelumnya, bisa diabaikan
         console.error("Error deferring reply (can be ignored if already replied):", e);
-      });
+      }
       
       // Verifikasi voice channel
       if (!interaction.member.voice.channel) {
         return interaction.editReply({ 
           content: "Kamu perlu berada di voice channel untuk memutar musik!",
           ephemeral: true
-        });
+        }).catch(e => {});
       }
       
-      // Mendapatkan pengaturan bahasa
-      let lang = await db?.musicbot?.findOne({ guildID: interaction.guild.id });
-      lang = lang?.language || client.language;
-      lang = require(`../languages/${lang}.js`);
-
       const stp = interaction.options.getSubcommand();
 
       if (stp === "playlist") {
         // Handle custom playlist feature
         const playlistw = interaction.options.getString("name");
-        const playlist = await db?.playlist?.find().catch((e) => {});
-        if (!playlist?.length > 0) return interaction.editReply({ content: lang.msg52, ephemeral: true }).catch((e) => {});
+        let playlist;
+        
+        try {
+          playlist = await db?.playlist?.find().catch((e) => { console.error("Error fetching playlists:", e); });
+        } catch (e) {
+          console.error("Error querying playlists:", e);
+        }
+        
+        if (!playlist?.length > 0) {
+          return interaction.editReply({ content: lang.msg52, ephemeral: true }).catch(e => {});
+        }
 
         let arr = 0;
         for (let i = 0; i < playlist.length; i++) {
@@ -71,15 +92,15 @@ module.exports = {
 
             if (playlist_owner_filter !== interaction.member.id) {
               if (playlist_public_filter === false) {
-                return interaction.editReply({ content: lang.msg53, ephemeral: true }).catch((e) => {});
+                return interaction.editReply({ content: lang.msg53, ephemeral: true }).catch(e => {});
               }
             }
 
             const music_filter = playlist[i]?.musics?.filter((m) => m.playlist_name === playlistw);
             if (!music_filter?.length > 0)
-              return interaction.editReply({ content: lang.msg54, ephemeral: true }).catch((e) => {});
+              return interaction.editReply({ content: lang.msg54, ephemeral: true }).catch(e => {});
 
-            await interaction.editReply({ content: lang.msg56 }).catch((e) => {});
+            await interaction.editReply({ content: lang.msg56 }).catch(e => {});
 
             const songs = [];
             music_filter.map((m) => songs.push(m.music_url));
@@ -123,68 +144,79 @@ module.exports = {
                     .replace("{interaction.member.id}", interaction.member.id)
                     .replace("{music_filter.length}", music_filter.length),
                 })
-                .catch((e) => {});
+                .catch(e => {});
 
-              playlist[i]?.playlist
-                ?.filter((p) => p.name === playlistw)
-                .map(async (p) => {
-                  await db.playlist
-                    .updateOne(
-                      { userID: p.author },
-                      {
-                        $pull: {
-                          playlist: {
-                            name: playlistw,
+              // Perlu try-catch sendiri untuk operasi update database
+              try {
+                // Update database hanya ketika playlist bisa diputar
+                await Promise.all(playlist[i]?.playlist
+                  ?.filter((p) => p.name === playlistw)
+                  .map(async (p) => {
+                    try {
+                      await db.playlist
+                        .updateOne(
+                          { userID: p.author },
+                          {
+                            $pull: {
+                              playlist: {
+                                name: playlistw,
+                              },
+                            },
                           },
-                        },
-                      },
-                      { upsert: true },
-                    )
-                    .catch((e) => {});
+                          { upsert: true },
+                        )
+                        .catch(e => { console.error("Error updating playlist (pull):", e); });
 
-                  await db.playlist
-                    .updateOne(
-                      { userID: p.author },
-                      {
-                        $push: {
-                          playlist: {
-                            name: p.name,
-                            author: p.author,
-                            authorTag: p.authorTag,
-                            public: p.public,
-                            plays: Number(p.plays) + 1,
-                            createdTime: p.createdTime,
-                            // Menambah properti baru sesuai DisTube Playlist struct
-                            songs: music_filter.map(m => ({
-                              url: m.music_url,
-                              name: m.music_title || m.music_name || "Unknown",
-                              thumbnail: m.music_thumbnail || null,
-                              duration: m.music_duration || 0,
-                              source: m.music_source || "youtube"
-                            })),
-                            source: "custom",
-                            duration: totalDuration,
-                            formattedDuration: formatDuration(totalDuration)
+                      await db.playlist
+                        .updateOne(
+                          { userID: p.author },
+                          {
+                            $push: {
+                              playlist: {
+                                name: p.name,
+                                author: p.author,
+                                authorTag: p.authorTag,
+                                public: p.public,
+                                plays: Number(p.plays) + 1,
+                                createdTime: p.createdTime,
+                                // Menambah properti baru sesuai DisTube Playlist struct
+                                songs: music_filter.map(m => ({
+                                  url: m.music_url,
+                                  name: m.music_title || m.music_name || "Unknown",
+                                  thumbnail: m.music_thumbnail || null,
+                                  duration: m.music_duration || 0,
+                                  source: m.music_source || "youtube"
+                                })),
+                                source: "custom",
+                                duration: totalDuration,
+                                formattedDuration: formatDuration(totalDuration)
+                              },
+                            },
                           },
-                        },
-                      },
-                      { upsert: true },
-                    )
-                    .catch((e) => {});
-                });
+                          { upsert: true },
+                        )
+                        .catch(e => { console.error("Error updating playlist (push):", e); });
+                    } catch (dbError) {
+                      console.error("Error during database update:", dbError);
+                    }
+                  }));
+              } catch (dbError) {
+                console.error("Error updating playlist in database:", dbError);
+                // Tidak perlu menghentikan pemutaran musik jika gagal update database
+              }
             } catch (e) {
               console.error("Error playing playlist:", e);
-              await interaction.editReply({ 
+              interaction.editReply({ 
                 content: `${lang.msg60}\nError: ${e.message}`,
                 ephemeral: true 
-              }).catch((e) => {
+              }).catch(e => {
                 console.error("Error updating reply after playlist error:", e);
               });
             }
           } else {
             arr++;
             if (arr === playlist.length) {
-              return interaction.editReply({ content: lang.msg58, ephemeral: true }).catch((e) => {});
+              return interaction.editReply({ content: lang.msg58, ephemeral: true }).catch(e => {});
             }
           }
         }
@@ -192,22 +224,24 @@ module.exports = {
 
       if (stp === "normal") {
         const name = interaction.options.getString("name");
-        if (!name) return interaction.editReply({ content: lang.msg59, ephemeral: true }).catch((e) => {});
+        if (!name) return interaction.editReply({ content: lang.msg59, ephemeral: true }).catch(e => {});
 
         // Buat embed loading yang lebih menarik
         const loadingEmbed = new EmbedBuilder()
           .setColor("#474747")
           .setDescription(`${lang.msg61} \`${name}\``);
         
-        // Kirim pesan loading
-        const loadingMessage = await interaction.editReply({ 
-          embeds: [loadingEmbed], 
-          fetchReply: true 
-        }).catch(e => {
+        // Kirim pesan loading dengan penanganan error yang lebih baik
+        let loadingMessage;
+        try {
+          loadingMessage = await interaction.editReply({ 
+            embeds: [loadingEmbed]
+          });
+          console.log(`[DEBUG][/play] Loading Embed: ${loadingMessage?.id || 'not found'}`);
+        } catch (e) {
           console.error("Error sending loading message:", e);
-        });
-
-        console.log(`[DEBUG][/play] Loading Embed: ${loadingMessage.id}`)
+          // Tetap lanjutkan meski gagal mengirim loading message
+        }
 
         try {
           // DisTube dapat langsung menangani berbagai sumber termasuk Spotify 
@@ -233,22 +267,29 @@ module.exports = {
             .setDescription(`${lang.msg60}: ${e.message}`)
             .setFooter({ text: "Silakan coba dengan URL atau kata kunci lain" });
           
-          await loadingMessage.edit({ 
-            embeds: [errorEmbed],
-            content: null
-          }).catch(e => console.error("Error updating error message:", e));
+          try {
+            await interaction.editReply({ 
+              embeds: [errorEmbed],
+              content: null
+            });
+          } catch (replyError) {
+            console.error("Error updating error message:", replyError);
+          }
         }
       }
     } catch (e) {
       console.error("Top-level play command error:", e);
       
+      // Fallback language for error handling
+      const lang = require(`../languages/${config.language || "en"}.js`);
+      
       try {
-        if (!interaction.deferred && !interaction.replied) {
+        if (!interaction.replied && !interaction.deferred) {
           await interaction.reply({
             content: "Terjadi kesalahan saat menjalankan perintah. Silakan coba lagi nanti.",
             ephemeral: true
           }).catch(e => {});
-        } else if (interaction.deferred) {
+        } else {
           await interaction.editReply({
             content: "Terjadi kesalahan saat memproses perintah. Silakan coba lagi nanti.",
             ephemeral: true

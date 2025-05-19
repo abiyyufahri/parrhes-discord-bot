@@ -7,7 +7,9 @@ module.exports = {
   ownerID: [], //write your discord user id. example: ["id"] or ["id1","id2"]
   botInvite: "", //write your discord bot invite.
   supportServer: "", //write your discord bot support server invite.
-  mongodbURL: process.env.MONGODB_URL || "mongodb+srv://abiyyurahid20:tokoobat123@abiyyuuu.0unjwd1.mongodb.net/?retryWrites=true&w=majority",
+  // Firebase config
+  firebaseEnabled: true,
+  // Menghapus MongoDB URL sepenuhnya
   status: "https://abiyyufahri.rf.gd",
   commandsDir: "./commands", //Please don't touch
   language: "en", //en, tr, nl, pt, fr, ar, zh_TW, it, ja

@@ -91,24 +91,33 @@ client.player.on("connectionError", (queue, error) => {
   // Try to fix the connection
   setTimeout(() => {
     try {
-      if (queue && queue.voice && queue.voice.channel) {
+      if (queue && queue.voice?.channel) {
         console.log("[RECOVERY] Attempting to rejoin voice channel after connection error");
         
-        // Force disconnect and reconnect to fix issues
-        queue.voice.leave();
+        // Jangan force disconnect, karena ini bisa menyebabkan kehilangan state
+        // Sebaliknya, langsung coba hubungkan kembali
+        const channelId = queue.voice.channel.id;
+        const guildId = queue.textChannel?.guild?.id;
         
-        // Wait a bit then reconnect
-        setTimeout(() => {
-          try {
-            if (queue.songs.length > 0) {
-              const channel = queue.voice.channel;
-              queue.connect();
-              console.log("[RECOVERY] Successfully reconnected to voice channel");
-            }
-          } catch (reconnectError) {
-            console.error("[RECOVERY] Failed to reconnect:", reconnectError);
-          }
-        }, 2000);
+        if (channelId && guildId) {
+          // Direct reconnect using Discord.js voice
+          const connection = joinVoiceChannel({
+            channelId: channelId,
+            guildId: guildId,
+            adapterCreator: queue.textChannel.guild.voiceAdapterCreator,
+            selfDeaf: true
+          });
+          
+          connection.on(VoiceConnectionStatus.Ready, () => {
+            console.log("[RECOVERY] Successfully reconnected to voice channel");
+            // Resume playback if it's paused
+            setTimeout(() => {
+              if (queue.paused) {
+                queue.resume();
+              }
+            }, 1000);
+          });
+        }
       }
     } catch (recoveryError) {
       console.error("[RECOVERY] Error in recovery process:", recoveryError);
@@ -152,10 +161,30 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
       if (queue && queue.songs && queue.songs.length > 0) {
         console.log('[VOICE] Queue still has songs, attempting to reconnect');
         
-        // Wait a bit and try to reconnect
+        // Wait a bit and try to reconnect - FIX: gunakan metode yang benar untuk reconnect
         setTimeout(() => {
           try {
-            queue.connect();
+            // DisTube v5 uses different reconnection method
+            if (queue.voice?.channel) {
+              console.log(`[VOICE] Attempting to rejoin channel ${oldState.channelId}`);
+              // Direct reconnect using Discord.js voice
+              const connection = joinVoiceChannel({
+                channelId: oldState.channelId,
+                guildId: oldState.guild.id,
+                adapterCreator: oldState.guild.voiceAdapterCreator,
+                selfDeaf: true
+              });
+              
+              connection.on(VoiceConnectionStatus.Ready, () => {
+                console.log('[VOICE] Successfully reconnected!');
+                // Resume playback if needed
+                if (queue.paused) {
+                  queue.resume();
+                }
+              });
+            } else {
+              console.log('[VOICE] No voice channel to reconnect to');
+            }
           } catch (reconnectError) {
             console.error('[VOICE] Failed to reconnect after voice state change:', reconnectError);
           }
@@ -251,30 +280,19 @@ if (config.TOKEN || process.env.TOKEN) {
   }, 2000)
 }
 
-if (config.mongodbURL || process.env.MONGO) {
-  const mongoose = require("mongoose")
-  // Fix for the strictQuery deprecation warning
-  mongoose.set("strictQuery", false)
-  mongoose
-    .connect(config.mongodbURL || process.env.MONGO, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    })
-    .then(async () => {
-      console.log(`Connected MongoDB`)
-    })
-    .catch((err) => {
-      console.log("\nMongoDB Error: " + err + "\n\n" + lang.error4)
-    })
+// Inisialisasi Firebase jika diaktifkan
+if (config.firebaseEnabled) {
+  // Firebase initialization
+  require('./db'); // Memastikan db.js diload
+  console.log('Connected to Firestore database via db.js');
 } else {
-  console.log(lang.error4)
+  console.log("WARN: Firestore tidak aktif. Beberapa fitur mungkin tidak berfungsi dengan baik.");
 }
 
 const express = require("express")
 const app = express()
 const https = require("https")
 const querystring = require("querystring")
-const mongoose = require("mongoose")
 
 // URI redirect untuk aliran otentikasi
 const authCallbackURI = "/callback"
@@ -282,21 +300,9 @@ const authCallbackURI = "/callback"
 let accessToken
 let refreshToken
 
-// Koneksi ke MongoDB
-// Fix for the strictQuery deprecation warning
-mongoose.set("strictQuery", false)
-mongoose.connect(config.mongodbURL, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-
-// Skema MongoDB untuk menyimpan token akses dan penyegaran
-const tokenSchema = new mongoose.Schema({
-  accessToken: String,
-  refreshToken: String,
-})
-
-const Token = mongoose.model("Token", tokenSchema)
+// Firebase references for Spotify tokens
+const { firestoreAdmin } = require('./firebaseConfig');
+const tokensCollection = firestoreAdmin.collection('tokens');
 
 // Fungsi untuk pertukaran kode akses dengan token akses dan refresh token
 function exchangeCodeForToken(code) {
@@ -355,13 +361,18 @@ function exchangeCodeForToken(code) {
   })
 }
 
-// Fungsi untuk simpan token akses dan token penyegaran ke dalam MongoDB
+// Fungsi untuk simpan token akses dan token penyegaran ke dalam Firestore
 async function saveTokens(accessToken, refreshToken) {
-  const token = new Token({
-    accessToken,
-    refreshToken,
-  })
-  await token.save()
+  try {
+    // Use a fixed document ID for simplicity
+    await tokensCollection.doc('spotify').set({
+      accessToken,
+      refreshToken,
+      updatedAt: firestoreAdmin.FieldValue.serverTimestamp()
+    });
+  } catch (error) {
+    console.error('Error saving tokens to Firestore:', error);
+  }
 }
 
 // Fungsi untuk memperbarui token akses menggunakan refresh token
@@ -421,7 +432,14 @@ async function refreshAccessToken() {
 
 // Fungsi untuk memperbarui token akses di database
 async function updateAccessToken(newAccessToken) {
-  await Token.updateOne({}, { accessToken: newAccessToken })
+  try {
+    await tokensCollection.doc('spotify').update({
+      accessToken: newAccessToken,
+      updatedAt: firestoreAdmin.FieldValue.serverTimestamp()
+    });
+  } catch (error) {
+    console.error('Error updating access token in Firestore:', error);
+  }
 }
 
 // Definisikan rute untuk URI redirect

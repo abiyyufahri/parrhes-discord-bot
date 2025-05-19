@@ -11,8 +11,8 @@ Untuk alasan keamanan, bot ini menggunakan variabel lingkungan untuk menyimpan i
 # Discord Bot Configuration
 DISCORD_TOKEN=your_discord_bot_token_here
 
-# MongoDB Configuration
-MONGODB_URL=your_mongodb_connection_string_here
+# Firebase Configuration
+# Firestore credentials diatur dalam service-account.json
 
 # Spotify API Configuration
 SPOTIFY_CLIENT_ID=your_spotify_client_id_here
@@ -21,6 +21,16 @@ SPOTIFY_REDIRECT_URI=http://localhost:3002/callback
 ```
 
 3. Pastikan file `.env` dimasukkan dalam `.gitignore` untuk mencegah informasi sensitif masuk ke repositori.
+
+## Konfigurasi Firebase
+
+Bot ini menggunakan Firebase Firestore untuk penyimpanan data. Ikuti langkah-langkah ini untuk menyiapkan Firebase:
+
+1. Buat project di [Firebase Console](https://console.firebase.google.com/)
+2. Buat database Firestore di mode Production
+3. Buat service account di Settings > Service accounts > Generate new private key
+4. Simpan file JSON yang diunduh sebagai `service-account.json` di direktori utama projek
+5. Pastikan `service-account.json` dimasukkan dalam `.gitignore`
 
 ## Penting: Keamanan Kredensial
 

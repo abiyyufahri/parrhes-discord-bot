@@ -9,6 +9,15 @@ jspm_packages/
 .env.test.local
 .env.production.local
 
+# Firebase config
+firebaseConfig.js
+
+# config
+config.js
+
+# service-account.json
+service-account.json
+
 # Logs
 logs
 *.log

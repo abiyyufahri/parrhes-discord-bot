@@ -1,21 +1,8 @@
-const { Schema, model } = require("mongoose");
+// mongoDB.js - Firebase Firestore adapter
+// This file maintains the same API as the original MongoDB version
+// but now simply redirects to db.js
 
-const musicbot = Schema({
-  guildID: String,
-  role: String,
-  language: String,
-  channels: Array,
-});
+const db = require('./db');
 
-
-const playlist = Schema({
-  userID: String,
-  playlist: Array,
-  musics: Array,
-});
-
-
-module.exports = {
-  musicbot: model("musicbot", musicbot),
-  playlist: model("playlist", playlist)
-};
+// Re-export db object
+module.exports = db; 
