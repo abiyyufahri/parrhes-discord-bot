@@ -8,6 +8,7 @@ module.exports = {
   botInvite: "", //write your discord bot invite.
   supportServer: "", //write your discord bot support server invite.
   // Firebase config
+  
   firebaseEnabled: true,
   // Menghapus MongoDB URL sepenuhnya
   status: "https://abiyyufahri.rf.gd",
