@@ -4,41 +4,8 @@
 const { admin } = require('../../firebaseConfig');
 
 // Referensi koleksi untuk pengaturan bot di guild
-const musicbotCollection = admin.firestore().collection('musicbot');
+const botGuildCollection = admin.firestore().collection('bot_guilds');
 
-/**
- * Mendapatkan pengaturan guild berdasarkan guildID
- * @param {string} guildId - ID guild Discord
- * @returns {Promise<Object|null>} - Pengaturan guild atau null jika tidak ditemukan
- */
-const getGuildSettings = async (guildId) => {
-  try {
-    const doc = await musicbotCollection.doc(guildId).get();
-    
-    if (doc.exists) {
-      return { id: doc.id, ...doc.data() };
-    }
-    
-    return null;
-  } catch (error) {
-    console.error('[MusicbotRepository] Error getting guild settings:', error);
-    throw error;
-  }
-};
-
-/**
- * Mendapatkan semua pengaturan guild
- * @returns {Promise<Array>} - Array dari semua pengaturan guild
- */
-const getAllGuildSettings = async () => {
-  try {
-    const snapshot = await musicbotCollection.get();
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  } catch (error) {
-    console.error('[MusicbotRepository] Error getting all guild settings:', error);
-    throw error;
-  }
-};
 
 /**
  * Menyimpan atau memperbarui pengaturan guild
@@ -48,25 +15,10 @@ const getAllGuildSettings = async () => {
  */
 const saveGuildSettings = async (guildId, settings) => {
   try {
-    await musicbotCollection.doc(guildId).set(settings, { merge: true });
+    await botGuildCollection.doc(guildId).set(settings, { merge: true });
     return true;
   } catch (error) {
     console.error('[MusicbotRepository] Error saving guild settings:', error);
-    throw error;
-  }
-};
-
-/**
- * Menghapus pengaturan guild
- * @param {string} guildId - ID guild Discord
- * @returns {Promise<boolean>} - True jika berhasil
- */
-const deleteGuildSettings = async (guildId) => {
-  try {
-    await musicbotCollection.doc(guildId).delete();
-    return true;
-  } catch (error) {
-    console.error('[MusicbotRepository] Error deleting guild settings:', error);
     throw error;
   }
 };
@@ -78,7 +30,7 @@ const deleteGuildSettings = async (guildId) => {
  */
 const getGuildLanguage = async (guildId) => {
   try {
-    const doc = await musicbotCollection.doc(guildId).get();
+    const doc = await botGuildCollection.doc(guildId).get();
     
     if (doc.exists) {
       return doc.data().language || 'en';
@@ -99,7 +51,7 @@ const getGuildLanguage = async (guildId) => {
  */
 const saveGuildLanguage = async (guildId, language) => {
   try {
-    await musicbotCollection.doc(guildId).set({ 
+    await botGuildCollection.doc(guildId).set({ 
       guildID: guildId,
       language 
     }, { merge: true });
@@ -112,10 +64,7 @@ const saveGuildLanguage = async (guildId, language) => {
 };
 
 module.exports = {
-  getGuildSettings,
-  getAllGuildSettings,
   saveGuildSettings,
-  deleteGuildSettings,
   getGuildLanguage,
   saveGuildLanguage
 }; 

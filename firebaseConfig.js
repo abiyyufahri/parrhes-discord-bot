@@ -10,8 +10,8 @@ const firebaseConfig = {
   projectId: "heroic-venture-391412",
   storageBucket: "heroic-venture-391412.firebasestorage.app",
   messagingSenderId: "655196610308",
-  appId: "1:655196610308:web:bbcb62217b5ac1689c7a51",
-  measurementId: "G-B224MG3B83"
+  appId: "1:655196610308:web:a508110b385ca8e39c7a51",
+  measurementId: "G-CHDRYYZ83K"
 };
 
 // Initialize Firebase client SDK
