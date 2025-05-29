@@ -21,6 +21,9 @@ module.exports = {
   server: {
     findOne: async (query) => {
       return await musicbotRepository.isGuildRegistered(query.guildID);
+    },
+    deleteOne: async (query) => {
+      return await musicbotRepository.deleteGuild(query.guildID);
     }
   },
   

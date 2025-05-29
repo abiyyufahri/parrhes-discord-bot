@@ -182,6 +182,21 @@ const language = {
   error_tip_permission: "Saran: Bot tidak memiliki izin yang diperlukan. Periksa izin bot di channel suara.",
 
   // Entri baru untuk finish.js
-  queue_finished: "Antrian Selesai"
+  queue_finished: "Antrian Selesai",
+  
+  // Entri baru untuk guild join/create
+  checking_server: "Memeriksa Status Server",
+  checking_server_desc: "Mohon tunggu sebentar, sedang memeriksa status registrasi server...",
+  checking_footer: "Pemeriksaan akan selesai dalam beberapa detik",
+  unregistered_server: "Server Tidak Terdaftar",
+  unregistered_server_desc: "Untuk menggunakan bot ini, admin server harus mendaftar melalui web dashboard kami.",
+  dashboard_url: "URL Dashboard",
+  status: "Status",
+  bot_leave_status: "Bot akan meninggalkan server karena tidak terdaftar.",
+  register_tip: "Silakan mendaftar untuk menggunakan bot",
+  welcome_title: "Terima Kasih Telah Menggunakan Bot Kami!",
+  registered_server_desc: "Server ini telah terdaftar. Gunakan `/help` untuk melihat daftar perintah yang tersedia.",
+  server_registered_status: "✅ Server terdaftar dan siap digunakan",
+  enjoy_bot: "Selamat menggunakan bot"
 }
 module.exports = language;

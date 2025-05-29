@@ -182,7 +182,22 @@ const language = {
   error_tip_permission: "Tip: The bot doesn't have the required permissions. Check bot permissions in the voice channel.",
   
   // New entries for finish.js
-  queue_finished: "Queue Finished"
+  queue_finished: "Queue Finished",
+  
+  // New entries for guild join/create
+  checking_server: "Checking Server Status",
+  checking_server_desc: "Please wait a moment, checking server registration status...",
+  checking_footer: "Check will be completed in a few seconds",
+  unregistered_server: "Server Not Registered",
+  unregistered_server_desc: "To use this bot, the server administrator must register through our web dashboard.",
+  dashboard_url: "Dashboard URL",
+  status: "Status",
+  bot_leave_status: "Bot will leave the server because it is not registered.",
+  register_tip: "Please register to use the bot",
+  welcome_title: "Thank You For Using Our Bot!",
+  registered_server_desc: "This server is registered. Use `/help` to see the list of available commands.",
+  server_registered_status: "✅ Server is registered and ready to use",
+  enjoy_bot: "Enjoy using the bot"
 }
 module.exports = language;
 

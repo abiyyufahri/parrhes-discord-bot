@@ -1,6 +1,30 @@
 // src/events/discord/guildCreate.js
 const logger = require('../../utils/logger');
 const { dbService } = require('../../services/core');
+const { EmbedBuilder } = require('discord.js');
+const en = require('../../../languages/en');
+const id = require('../../../languages/id');
+
+/**
+ * Mendapatkan string terjemahan berdasarkan bahasa guild
+ * @param {string} server_lang - Kode bahasa server (id, en)
+ * @param {string} key - Kunci terjemahan
+ * @returns {string} - String terjemahan
+ */
+function getLang(server_lang = 'en', key) {
+  // Tambahkan bahasa lain jika diperlukan
+  let lang;
+  switch(server_lang) {
+    case 'id':
+      lang = id;
+      break;
+    default:
+      lang = en;
+      break;
+  }
+  
+  return lang[key] || en[key] || key;
+}
 
 /**
  * Fungsi delay dengan Promise
@@ -8,6 +32,56 @@ const { dbService } = require('../../services/core');
  * @returns {Promise} - Promise yang resolve setelah waktu tertentu
  */
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+/**
+ * Fungsi untuk membuat embed checking status
+ * @param {string} lang - Kode bahasa
+ * @returns {EmbedBuilder} Discord embed untuk checking status
+ */
+function getCheckingEmbed(lang = 'en') {
+  return new EmbedBuilder()
+    .setColor('#FFCC00')
+    .setTitle('<a:loader:1166440593895981106>    ' + getLang(lang, 'checking_server'))
+    .setDescription(getLang(lang, 'checking_server_desc'))
+    .setFooter({ text: getLang(lang, 'checking_footer') })
+    .setTimestamp();
+}
+
+/**
+ * Fungsi untuk membuat embed server tidak terdaftar
+ * @param {string} lang - Kode bahasa
+ * @returns {EmbedBuilder} Discord embed untuk server tidak terdaftar
+ */
+function getUnregisteredEmbed(lang = 'en') {
+  return new EmbedBuilder()
+    .setColor('#FF0000')
+    .setTitle('⚠️ ' + getLang(lang, 'unregistered_server'))
+    .setDescription(getLang(lang, 'unregistered_server_desc'))
+    .addFields(
+      { name: getLang(lang, 'dashboard_url'), value: '🔗 https://biyxto.abiyyufahri.my.id', inline: false },
+      { name: getLang(lang, 'status'), value: getLang(lang, 'bot_leave_status'), inline: false }
+    )
+    .setFooter({ text: getLang(lang, 'register_tip') })
+    .setTimestamp();
+}
+
+/**
+ * Fungsi untuk membuat embed server terdaftar
+ * @param {string} lang - Kode bahasa
+ * @returns {EmbedBuilder} Discord embed untuk server terdaftar
+ */
+function getRegisteredEmbed(lang = 'en') {
+  return new EmbedBuilder()
+    .setColor('#00FF00')
+    .setTitle('👋 ' + getLang(lang, 'welcome_title'))
+    .setDescription(getLang(lang, 'registered_server_desc'))
+    .addFields(
+      { name: getLang(lang, 'dashboard_url'), value: '🔗 https://biyxto.abiyyufahri.my.id/dashboard', inline: false },
+      { name: getLang(lang, 'status'), value: getLang(lang, 'server_registered_status'), inline: false }
+    )
+    .setFooter({ text: getLang(lang, 'enjoy_bot') })
+    .setTimestamp();
+}
 
 /**
  * Fungsi untuk memeriksa ketersediaan guild dengan retry logic
@@ -33,7 +107,7 @@ async function checkGuildWithRetry(client, guildId, maxRetries = 3, delayMs = 30
       
       if (existingGuild) {
         logger.info(LOG_CATEGORY, `Guild ${guildId} terdeteksi terdaftar pada percobaan ke-${currentAttempt}`);
-        return true;
+        return existingGuild;
       }
       
       logger.info(LOG_CATEGORY, `Guild ${guildId} belum terdaftar pada percobaan ke-${currentAttempt}`);
@@ -64,25 +138,45 @@ module.exports = async (client, guild) => {
   try {
     logger.info(LOG_CATEGORY, `Bot ditambahkan ke guild baru: ${guild.name} (${guild.id})`);
     
-    // Memperbarui pesan log untuk mencerminkan interval 10 detik
-    // Periksa apakah guild sudah terdaftar di Firestore dengan 3x retry
-    logger.info(LOG_CATEGORY, `Memulai pemeriksaan ketersediaan guild ${guild.id} dengan 3x retry (interval 10 detik)`);
+    // Cari channel default yang bisa dikirimi pesan
+    const defaultChannel = guild.channels.cache.find(
+      channel => channel.type === 0 && channel.permissionsFor(guild.members.me).has('SendMessages')
+    );
+    
+    // Dapatkan data guild untuk bahasa jika ada
+    let server_lang = 'en';
+    let guildData = null;
+    
+    try {
+      // Coba cek pengaturan bahasa dari database terlebih dahulu
+      guildData = await dbService.server.findOne({ guildID: guild.id });
+      if (guildData && guildData.language) {
+        server_lang = guildData.language;
+      }
+    } catch (error) {
+      logger.error(LOG_CATEGORY, `Error saat mengambil pengaturan bahasa: ${error}`);
+    }
+    
+    // Kirim pesan awal dengan status checking
+    let statusMessage = null;
+    if (defaultChannel) {
+      statusMessage = await defaultChannel.send({
+        embeds: [getCheckingEmbed(server_lang)]
+      });
+    }
+    
+    // Memulai pemeriksaan ketersediaan guild
+    logger.info(LOG_CATEGORY, `Memulai pemeriksaan ketersediaan guild ${guild.id} dengan 3x retry (interval 8 detik)`);
     const existingGuild = await checkGuildWithRetry(client, guild.id, 3, 8000);
     
     if (!existingGuild) {
       logger.warn(LOG_CATEGORY, `Guild ${guild.id} tidak terdaftar di database setelah 3x percobaan. Bot akan langsung meninggalkan server.`);
-      
-      // Kirim pesan ke default channel
-      const defaultChannel = guild.channels.cache.find(
-        channel => channel.type === 0 && channel.permissionsFor(guild.members.me).has('SendMessages')
-      );
-      
-      if (defaultChannel) {
-        await defaultChannel.send({
-          content: `⚠️ **Server ini tidak terdaftar!**\n\n` +
-                  `Untuk menggunakan bot ini, admin server harus mendaftar melalui web dashboard kami:\n` +
-                  `🔗 https://biyxto.abiyyufahri.my.id\n\n` +
-                  `Bot akan meninggalkan server karena server tidak terdaftar.`
+      await dbService.server.deleteOne({ guildID: guild.id });
+
+      // Edit pesan dengan embed server tidak terdaftar
+      if (statusMessage) {
+        await statusMessage.edit({
+          embeds: [getUnregisteredEmbed(server_lang)]
         });
       }
       
@@ -101,7 +195,10 @@ module.exports = async (client, guild) => {
         }
       }
       
-      // Langsung meninggalkan guild tanpa timeout
+      // Tunggu 1 detik sebelum meninggalkan guild agar pesan dapat dibaca
+      await delay(1000);
+      
+      // Meninggalkan guild
       try {
         await guild.leave();
         logger.info(LOG_CATEGORY, `Bot berhasil meninggalkan guild ${guild.id} karena tidak terdaftar`);
@@ -122,19 +219,17 @@ module.exports = async (client, guild) => {
         logger.error(LOG_CATEGORY, `Error saat mencoba meninggalkan guild ${guild.id}: ${error}`);
       }
     } else {
+      // Update server_lang jika guild ditemukan
+      if (existingGuild.language) {
+        server_lang = existingGuild.language;
+      }
+      
       logger.info(LOG_CATEGORY, `Guild ${guild.id} sudah terdaftar di database. Bot tetap bergabung.`);
       
-      // Kirim pesan sambutan untuk guild yang terdaftar
-      const defaultChannel = guild.channels.cache.find(
-        channel => channel.type === 0 && channel.permissionsFor(guild.members.me).has('SendMessages')
-      );
-      
-      if (defaultChannel) {
-        await defaultChannel.send({
-          content: `👋 **Terima kasih telah menggunakan bot kami!**\n\n` +
-                  `Server ini telah terdaftar. Gunakan \`/help\` untuk melihat daftar perintah yang tersedia.\n\n` +
-                  `Akses dashboard bot untuk konfigurasi lebih lanjut:\n` +
-                  `🔗 https://biyxto.abiyyufahri.my.id/dashboard`
+      // Edit pesan dengan embed server terdaftar
+      if (statusMessage) {
+        await statusMessage.edit({
+          embeds: [getRegisteredEmbed(server_lang)]
         });
       }
     }

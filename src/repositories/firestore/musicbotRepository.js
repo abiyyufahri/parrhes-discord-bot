@@ -44,6 +44,20 @@ const isGuildRegistered = async (guildId) => {
   }
 };
 
+/**
+ * Menghapus guild dari database
+ * @param {string} guildId - ID guild Discord
+ * @returns {Promise<boolean>} - True jika berhasil, false jika gagal
+ */
+const deleteGuild = async (guildId) => {
+  try {
+    await botGuildCollection.doc(guildId).delete();
+    return true;
+  } catch (error) {
+    logger.error(LOG_CATEGORY, `Error deleting guild: ${error.message}`);
+    return false;
+  }
+};
 
 /**
  * Memperbarui pengaturan guild
@@ -187,5 +201,6 @@ module.exports = {
   saveGuildLanguage,
   addChannelToGuild,
   isGuildRegistered,
-  removeChannelFromGuild
+  removeChannelFromGuild,
+  deleteGuild
 }; 
