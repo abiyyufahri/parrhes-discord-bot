@@ -46,7 +46,10 @@ module.exports = async (client, queue, song) => {
     try {
       const embed = new EmbedBuilder()
         .setColor("#3498db")
-        .setTitle(`<:music:1166419533360283648> ${lang.now_playing}`)
+        .setAuthor({
+          name: lang.now_playing || "Now Playing",
+          iconURL: 'https://cdn3.emoji.gg/emojis/66137-blue-play.png',
+        })
         .setDescription(
           lang.msg13
             .replace("{track?.title}", song?.name)

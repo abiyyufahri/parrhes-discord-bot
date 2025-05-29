@@ -2,17 +2,75 @@
 const logger = require('../../utils/logger');
 const { dbService } = require('../../services/core');
 
+/**
+ * Fungsi delay dengan Promise
+ * @param {number} ms - Milliseconds untuk delay
+ * @returns {Promise} - Promise yang resolve setelah waktu tertentu
+ */
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+/**
+ * Fungsi untuk memeriksa ketersediaan guild dengan retry logic
+ * @param {Client} client - Discord Client
+ * @param {string} guildId - ID guild yang akan diperiksa
+ * @param {number} maxRetries - Jumlah maksimal percobaan
+ * @param {number} delayMs - Jeda waktu antara percobaan (ms)
+ * @returns {Promise<boolean>} - true jika guild tersedia, false jika tidak
+ */
+async function checkGuildWithRetry(client, guildId, maxRetries = 3, delayMs = 3000) {
+  const LOG_CATEGORY = 'CheckGuildRetry';
+  let retries = 0;
+  
+  while (retries < maxRetries) {
+    const currentAttempt = retries + 1;
+    // Catat waktu mulai setiap percobaan
+    const startTime = Date.now();
+    logger.info(LOG_CATEGORY, `Percobaan ke-${currentAttempt} dari ${maxRetries} untuk cek guild ${guildId} pada ${new Date().toISOString()} (interval: ${delayMs/1000}s)`);
+    
+    // Cek apakah guild terdaftar di database server
+    try {
+      const existingGuild = await dbService.server.findOne({ guildID: guildId });
+      
+      if (existingGuild) {
+        logger.info(LOG_CATEGORY, `Guild ${guildId} terdeteksi terdaftar pada percobaan ke-${currentAttempt}`);
+        return true;
+      }
+      
+      logger.info(LOG_CATEGORY, `Guild ${guildId} belum terdaftar pada percobaan ke-${currentAttempt}`);
+    } catch (error) {
+      logger.error(LOG_CATEGORY, `Error saat memeriksa guild ${guildId} pada percobaan ke-${currentAttempt}: ${error}`);
+    }
+    
+    retries++;
+    
+    // Hanya delay dan retry jika belum mencapai percobaan terakhir
+    if (retries < maxRetries) {
+      // Hitung waktu yang tepat untuk menunggu (kompensasi waktu yang sudah digunakan)
+      const elapsedTime = Date.now() - startTime;
+      const remainingDelay = Math.max(1, delayMs - elapsedTime); // Minimal 1ms jika sudah melebihi waktu
+      
+      logger.info(LOG_CATEGORY, `Menunggu ${remainingDelay}ms sebelum percobaan ke-${retries + 1} (waktu berlalu: ${elapsedTime}ms)`);
+      await delay(remainingDelay);
+    }
+  }
+  
+  logger.warn(LOG_CATEGORY, `Guild ${guildId} tetap tidak terdeteksi setelah ${maxRetries} percobaan`);
+  return false;
+}
+
 module.exports = async (client, guild) => {
   const LOG_CATEGORY = 'GuildCreate';
   
   try {
     logger.info(LOG_CATEGORY, `Bot ditambahkan ke guild baru: ${guild.name} (${guild.id})`);
     
-    // Periksa apakah guild sudah terdaftar di Firestore
-    const existingGuild = await dbService.server.findOne({ guildID: guild.id });
+    // Memperbarui pesan log untuk mencerminkan interval 10 detik
+    // Periksa apakah guild sudah terdaftar di Firestore dengan 3x retry
+    logger.info(LOG_CATEGORY, `Memulai pemeriksaan ketersediaan guild ${guild.id} dengan 3x retry (interval 10 detik)`);
+    const existingGuild = await checkGuildWithRetry(client, guild.id, 3, 8000);
     
     if (!existingGuild) {
-      logger.warn(LOG_CATEGORY, `Guild ${guild.id} tidak terdaftar di database. Bot akan langsung meninggalkan server.`);
+      logger.warn(LOG_CATEGORY, `Guild ${guild.id} tidak terdaftar di database setelah 3x percobaan. Bot akan langsung meninggalkan server.`);
       
       // Kirim pesan ke default channel
       const defaultChannel = guild.channels.cache.find(

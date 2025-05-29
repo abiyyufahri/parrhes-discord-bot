@@ -26,7 +26,7 @@ module.exports = async (client, queue, playlist) => {
         .setColor("#1DB954") // Warna Spotify
         .setAuthor({ 
           name: lang.spotify_playlist || "Spotify Playlist", 
-          iconURL: 'https://i.imgur.com/rJPeWvQ.png' 
+          iconURL: 'https://cdn3.emoji.gg/emojis/82164-spotify.png' 
         })
         .setTitle(playlistName)
         .addFields(
