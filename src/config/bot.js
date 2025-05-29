@@ -3,7 +3,7 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 module.exports = {
-  TOKEN: process.env.DISCORD_TOKEN || "MTE2NTIxNzkxMDIxMDQ0OTQzOA.Gftoqx.Kq65S3y1tDrpLzg0yWzc3QHXRZCdG3x1-0UDbs",
+  TOKEN: process.env.DISCORD_TOKEN || "",
   ownerID: [], //write your discord user id. example: ["id"] or ["id1","id2"]
   botInvite: "", //write your discord bot invite.
   supportServer: "", //write your discord bot support server invite.
