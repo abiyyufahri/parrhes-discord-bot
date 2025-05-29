@@ -1,14 +1,26 @@
-const config = require('./config.js');
-const keep_alive = require('./keep_alive.js')
+/**
+ * Entry point for Parrhes Discord Bot
+ */
+const config = require('./src/config/bot');
+const logger = require('./src/utils/logger');
 
-if (config.shardManager.shardStatus == true) {
+const LOG_CATEGORY = 'Bootstrap';
 
+// Enable sharding if configured
+if (config.shardManager?.shardStatus === true) {
+  logger.info(LOG_CATEGORY, 'Starting bot with sharding enabled');
+  
   const { ShardingManager } = require('discord.js');
-  const manager = new ShardingManager('./bot.js', { token: config.TOKEN || process.env.TOKEN });
-  manager.on('shardCreate', shard => console.log(`Launched shard ${shard.id}`));
+  const manager = new ShardingManager('./src/index.js', { 
+    token: config.TOKEN || process.env.DISCORD_TOKEN 
+  });
+  
+  manager.on('shardCreate', shard => {
+    logger.info(LOG_CATEGORY, `Launched shard ${shard.id}`);
+  });
+  
   manager.spawn();
-
 } else {
-  require("./bot.js")
-
+  logger.info(LOG_CATEGORY, 'Starting bot in single-instance mode');
+  require('./src/index.js');
 }

@@ -1,6 +1,5 @@
-echo off
-color 1
-cls
-:a
-forever start index.js
-goto a
+@echo off
+echo Starting Parrhesia Discord Bot...
+title Parrhesia Bot
+node index.js
+pause

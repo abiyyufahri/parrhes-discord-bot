@@ -38,4 +38,63 @@ Jangan pernah menyimpan kredensial atau token secara langsung dalam file kode. S
 
 ## Penggunaan
 
-[Tambahkan instruksi penggunaan bot di sini] 
+[Tambahkan instruksi penggunaan bot di sini]
+
+## 🗂 Project Structure 
+
+```
+/parrhes-discord-bot/
+│
+├── src/                             # Kode sumber utama
+│   ├── commands/                    # Command handler
+│   │   ├── music/                   # Perintah terkait musik
+│   │   ├── playlist/                # Perintah terkait playlist
+│   │   ├── utility/                 # Perintah utilitas
+│   │   └── admin/                   # Perintah admin/moderator
+│   │
+│   ├── events/                      # Event handler
+│   │   ├── discord/                 # Event Discord
+│   │   └── player/                  # Event player musik
+│   │
+│   ├── services/                    # Service logic
+│   │   ├── music/                   # Layanan terkait musik
+│   │   ├── playlist/                # Layanan playlist
+│   │   └── core/                    # Layanan inti
+│   │
+│   ├── repositories/                # Data access layer
+│   │   ├── firestore/               # Implementasi Firestore
+│   │   └── mongodb/                 # Implementasi MongoDB (jika diperlukan)
+│   │
+│   ├── models/                      # Model data
+│   │   ├── playlist.js
+│   │   └── settings.js
+│   │
+│   ├── utils/                       # Helper dan utilitas
+│   │   ├── format.js                # Format pesan & tanggal
+│   │   ├── validators.js            # Validasi input
+│   │   ├── logger.js                # System logger
+│   │   └── constants.js             # Konstanta aplikasi
+│   │
+│   ├── middleware/                  # Middleware untuk commands
+│   │   ├── permission.js
+│   │   └── cooldown.js
+│   │
+│   └── config/                      # Konfigurasi
+│       ├── database.js
+│       ├── bot.js
+│       └── player.js
+│
+├── languages/                       # File bahasa/terjemahan
+│
+├── assets/                          # Asset seperti ikon atau citra
+│
+├── scripts/                         # Script utilitas
+│   ├── deploy-commands.js           # Deploy slash commands
+│   └── backup.js                    # Backup database
+│
+├── .env.example                     # Template file environment
+├── index.js                         # Entry point aplikasi
+├── bot.js                           # Kode bot utama
+├── .gitignore
+├── package.json
+└── README.md 
