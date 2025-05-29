@@ -1,9 +1,16 @@
 const { setGuildActiveStatus } = require('../../services/musicbotService');
+const { dbService } = require('../../services/core');
 
 module.exports = async (client, guild) => {
   try {
     console.log(`[GUILD DELETE] Bot was removed from guild: ${guild.name} (${guild.id})`);
     
+    const guildExists = await dbService.server.findOne({ guildID: guild.id });
+
+    if (!guildExists) {
+      return;
+    }
+
     // Mark the guild as inactive using the service layer
     const success = await setGuildActiveStatus(guild.id, false);
     

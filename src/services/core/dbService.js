@@ -18,6 +18,12 @@ const pendingOperations = {
 // Export service
 module.exports = {
   // Struktur untuk backward compatibility dengan kode yang menggunakan db.js
+  server: {
+    findOne: async (query) => {
+      return await musicbotRepository.isGuildRegistered(query.guildID);
+    }
+  },
+  
   playlist: {
     // Mendapatkan playlist milik user
     findOne: async (query) => {

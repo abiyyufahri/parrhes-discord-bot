@@ -30,6 +30,22 @@ const getGuildSettings = async (guildId) => {
 };
 
 /**
+ * Memeriksa apakah guild terdaftar
+ * @param {string} guildId - ID guild Discord
+ * @returns {Promise<boolean>} - True jika guild terdaftar, false jika tidak
+ */
+const isGuildRegistered = async (guildId) => {
+  try {
+    const doc = await botGuildCollection.doc(guildId).get();
+    return doc.exists;
+  } catch (error) {
+    logger.error(LOG_CATEGORY, `Error checking guild registration: ${error.message}`);
+    return false;
+  }
+};
+
+
+/**
  * Memperbarui pengaturan guild
  * @param {string} guildId - ID guild Discord
  * @param {Object} settings - Pengaturan guild yang akan diperbarui
@@ -170,5 +186,6 @@ module.exports = {
   getGuildLanguage,
   saveGuildLanguage,
   addChannelToGuild,
+  isGuildRegistered,
   removeChannelFromGuild
 }; 
